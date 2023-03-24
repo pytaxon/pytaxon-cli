@@ -16,7 +16,7 @@ try:
     for i, nome in enumerate(nomes):
         nomes_taxon = r.json()['data'][i]
     
-        print(f'{nome} consta no BD? {nomes_taxon['is_known_name']}')
+        print(f'{nome} consta no BD? {nomes_taxon["is_known_name"]}')
 
         df[nome] = [i['canonical_form'] for i in nomes_taxon['results']]
 
