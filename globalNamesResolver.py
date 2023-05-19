@@ -1,5 +1,3 @@
-import pprint
-import json
 import requests
 from front import logo_global_names_resolver
 
@@ -22,5 +20,5 @@ try:
         print(f'Nome buscado: {taxons}')
         for a in dbtaxons:
             print(a)
-except:
-    print('ERRO')
+except Exception as error:
+    print(error)
