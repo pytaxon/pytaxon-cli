@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 from collections import defaultdict
+from pprint import pprint
 
 class Pytaxon:
     def __init__(self, spreadsheet:str=False):
@@ -23,9 +24,10 @@ class Pytaxon:
         try:
             self._original_df = pd.read_excel(self._spreadsheet).reset_index()
             print('Succes reading the spreadsheet, now entering columns names...')
-            self.enter_columns_names()   
         except Exception as e:
             print('Error reading the spreadsheet: ', e)
+            
+        self.enter_columns_names()   
 
     def enter_columns_names(self) -> None:
         self._column1, self._column2 = input('Digit the name of the Genus and Species columns: ').split()
@@ -33,9 +35,10 @@ class Pytaxon:
         try: 
             self._taxons_list = list((self._original_df[self._column1] + ' ' + self._original_df[self._column2]).values)
             print('Success loading spreadsheet with given columns names, now connecting to API...')
-            self.connect_to_api()
         except Exception as e:
             print('Error loading spreadsheet with given columns names', e)
+            
+        self.connect_to_api()
 
     def connect_to_api(self) -> None:
         self._json_post = {'names': self._taxons_list,
@@ -45,9 +48,12 @@ class Pytaxon:
         try:
             self.r = requests.post('https://api.opentreeoflife.org/v3/tnrs/match_names', json=self._json_post)
             print('Success accessing the OpenTreeOfLife API, now checking taxons...')
-            self.incorrect_taxons()
         except Exception as error:
             print('Error accessing the OpenTreeOfLife API: ', error)
+
+        # pprint(self.r.json())
+
+        self.incorrect_taxons()
 
     def incorrect_taxons(self) -> None:
         self._matched_names = self.r.json()['matched_names']
@@ -73,6 +79,7 @@ class Pytaxon:
                 self._incorrect_taxon_data['Options'].append((list(range(1, len(match_names)+1))))
                 self._incorrect_taxon_data['Matches Scores'].append([round(match['score'], 3) for match in matches])
                 self._incorrect_taxon_data['Alternatives'].append(match_names)
+                self._incorrect_taxon_data['Taxon Sources'].append([match['taxon']['tax_sources'] for match in matches])
                 continue
 
         self.create_pivot_spreadsheet()
@@ -82,21 +89,21 @@ class Pytaxon:
         def sum2(num):
             return num + 2
         
-        # Ajeitar
         Alternatives1 = []
         Alternatives2 = []
         for i in range(len(self._incorrect_taxon_data['Alternatives'])):
-            result = f"Taxon:{self._incorrect_taxon_data['Alternatives'][0][i]} | Score:{self._incorrect_taxon_data['Matches Scores'][0][i]}"
-            result2 = f"Taxon:{self._incorrect_taxon_data['Alternatives'][1][i]} | Score:{self._incorrect_taxon_data['Matches Scores'][1][i]}"
+            result = f"Taxon:{self._incorrect_taxon_data['Alternatives'][i][0]} | Score:{self._incorrect_taxon_data['Matches Scores'][i][0]} | Sources:{self._incorrect_taxon_data['Taxon Sources'][i][0]}"
+            result2 = f"Taxon:{self._incorrect_taxon_data['Alternatives'][i][1]} | Score:{self._incorrect_taxon_data['Matches Scores'][i][1]} | Sources:{self._incorrect_taxon_data['Taxon Sources'][i][1]}"
+            
             Alternatives1.append(result)
             Alternatives2.append(result2)
-        
+
         self._df_to_correct = pd.DataFrame(data={  # Refazer
             'Error Line': list(map(sum2, self._incorrect_taxon_data['Error Line'])),
             'Wrong Taxon': self._incorrect_taxon_data['Wrong Taxon'],
             'Options': self._incorrect_taxon_data['Options'],
-            'Alternative1': [data for data in Alternatives1],  # Ajeitar
-            'Alternative2': [data for data in Alternatives2]  # Ajeitar
+            'Alternative1': Alternatives1,
+            'Alternative2': Alternatives2
             })
 
         print(self._df_to_correct)
