@@ -10,6 +10,6 @@ if __name__ == '__main__':
             case '1':
                 pt = Pytaxon(input('Insert the path to your spreadsheet: '))
             case '2':
-                pass
+                pt.update_original_spreadsheet()
             case _:
                 break
