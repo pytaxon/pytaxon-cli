@@ -53,9 +53,9 @@ class Pytaxon:
 
         # pprint(self.r.json())
 
-        self.incorrect_taxons()
+        self.data_incorrect_taxons()
 
-    def incorrect_taxons(self) -> None:
+    def data_incorrect_taxons(self) -> None:
         self._matched_names = self.r.json()['matched_names']
         self._incorrect_taxon_data = defaultdict(list)
 
@@ -92,8 +92,8 @@ class Pytaxon:
         Alternatives1 = []
         Alternatives2 = []
         for i in range(len(self._incorrect_taxon_data['Alternatives'])):
-            result = f"Taxon:{self._incorrect_taxon_data['Alternatives'][i][0]} | Score:{self._incorrect_taxon_data['Matches Scores'][i][0]} | Sources:{self._incorrect_taxon_data['Taxon Sources'][i][0]}"
-            result2 = f"Taxon:{self._incorrect_taxon_data['Alternatives'][i][1]} | Score:{self._incorrect_taxon_data['Matches Scores'][i][1]} | Sources:{self._incorrect_taxon_data['Taxon Sources'][i][1]}"
+            result = f"Taxon: {self._incorrect_taxon_data['Alternatives'][i][0]} | Score: {self._incorrect_taxon_data['Matches Scores'][i][0]} | Sources: {self._incorrect_taxon_data['Taxon Sources'][i][0]}"
+            result2 = f"Taxon: {self._incorrect_taxon_data['Alternatives'][i][1]} | Score: {self._incorrect_taxon_data['Matches Scores'][i][1]} | Sources: {self._incorrect_taxon_data['Taxon Sources'][i][1]}"
             
             Alternatives1.append(result)
             Alternatives2.append(result2)
@@ -107,13 +107,18 @@ class Pytaxon:
             })
 
         print(self._df_to_correct)
-        self._df_to_correct.to_excel(f'{self._spreadsheet[:-4]}_por_corrigir.xlsx')
-        self.update_original_spreadsheet()
+        try:
+            self._df_to_correct.to_excel(f'{self._spreadsheet[:-4]}_por_corrigir.xlsx')
+        except Exception as e:
+            print('Error creating corrected spreadsheet: ', e)
+        # self.update_original_spreadsheet()
 
     def update_original_spreadsheet(self):
         corrections = self._df_to_correct['Alternative1'].str.split(expand=True)  # Ajeitar
-        self._original_df.loc[self._incorrect_taxon_data['Error Line'], self._column1] = corrections[0].values
-        self._original_df.loc[self._incorrect_taxon_data['Error Line'], self._column2] = corrections[1].values
+
+
+        self._original_df.loc[self._incorrect_taxon_data['Error Line'], self._column1] = corrections[1].values
+        self._original_df.loc[self._incorrect_taxon_data['Error Line'], self._column2] = corrections[2].values
 
         try:
             self._original_df.to_excel(f'{self._spreadsheet[:-4]}_corrigido.xlsx')
