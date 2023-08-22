@@ -1,8 +1,10 @@
 from Bio import Entrez
+import json
+from pprint import pprint
+
+Entrez.email = "seu_email@example.com"
 
 def get_species_taxonomy(species_names):
-    Entrez.email = "seu_email@example.com"  # Substitua pelo seu e-mail registrado no NCBI
-
     taxonomies = []
 
     for species_name in species_names:
@@ -23,7 +25,22 @@ def get_species_taxonomy(species_names):
 
     return taxonomies
 
-species_names = ["Bia actorion", "Archaeoprepona licomedes", "Archaeoprepona demophoon"]  # Substitua pelos nomes das espécies desejadas
+def get_specie_taxonomy(specie_name):
+    handle = Entrez.esearch(db="taxonomy", term=specie_name)
+    record = Entrez.read(handle)
+    handle.close()
+
+    tax_id = record["IdList"][0]
+    handle = Entrez.efetch(db="taxonomy", id=tax_id, retmode="xml")
+    taxonomy_data = Entrez.read(handle)[0]
+    handle.close()
+
+    # print(json.dumps(record, indent=4))
+    print(json.dumps(taxonomy_data, indent=4))
+
+get_specie_taxonomy("Bia actorion")
+
+'''species_names = ["Bia actorion", "Archaeoprepona licomedes", "Archaeoprepona demophoon"]  # Substitua pelos nomes das espécies desejadas
 
 taxonomy_data = get_species_taxonomy(species_names)
 
@@ -39,4 +56,5 @@ for data in taxonomy_data:
     else:
         print("Espécie não encontrada na base de dados.")
     
-    print("=" * 30)
+    print("=" * 30)'''
+
