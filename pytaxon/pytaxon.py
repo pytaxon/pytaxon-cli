@@ -12,8 +12,9 @@ class Pytaxon:
         self._taxons_list:list = None
         self._json_post:dict = None
         self._matched_names:dict = None
-        self._incorrect_taxon_data:dict = None
+        self._incorrect_taxon_data:dict = defaultdict(list)
         self._df_to_correct:pd.DataFrame = None
+        self._incorrect_lineage_data:dict = defaultdict(list)
 
         if self._spreadsheet:
             self.read_spreadshet()
@@ -29,6 +30,7 @@ class Pytaxon:
             
         self.enter_columns_names()   
 
+    # Analyze TAXONOMIES (genus and species)
     def enter_columns_names(self) -> None:
         self._column1, self._column2 = input('Digit the name of the Genus and Species columns: ').split()
 
@@ -57,7 +59,6 @@ class Pytaxon:
 
     def data_incorrect_taxons(self) -> None:
         self._matched_names = self.r.json()['matched_names']
-        self._incorrect_taxon_data = defaultdict(list)
 
         for i, taxon in enumerate(self._matched_names):
             try:
@@ -68,6 +69,7 @@ class Pytaxon:
                 self._incorrect_taxon_data['Options'].append('No Correspondence')
                 self._incorrect_taxon_data['Match Score'].append(0)
                 self._incorrect_taxon_data['Alternatives'].append(None)
+                self._incorrect_taxon_data['Taxon Sources'].append(None)
                 continue
 
             if first_match_score < 1.:
@@ -82,10 +84,10 @@ class Pytaxon:
                 self._incorrect_taxon_data['Taxon Sources'].append([match['taxon']['tax_sources'] for match in matches])
                 continue
 
-        self.create_pivot_spreadsheet()
+        self.create_taxonomies_pivot_spreadsheet()
         # pprint(dict(self._incorrect_taxon_data))
 
-    def create_pivot_spreadsheet(self) -> None:
+    def create_taxonomies_pivot_spreadsheet(self) -> None:
         def sum2(num):
             return num + 2
         
