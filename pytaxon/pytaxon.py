@@ -4,43 +4,35 @@ from collections import defaultdict
 from pprint import pprint
 
 class Pytaxon:
-    def __init__(self, spreadsheet:str=False):
-        self._spreadsheet:str = spreadsheet.replace('"', '')
+    def __init__(self):
+        self._spreadsheet:str = None
         self._original_df:pd.DataFrame = None
-        self._column1:str = None
-        self._column2:str = None
+        self._genus_column:str = None
+        self._species_column:str = None
         self._taxons_list:list = None
         self._json_post:dict = None
         self._matched_names:dict = None
         self._incorrect_taxon_data:dict = defaultdict(list)
         self._df_to_correct:pd.DataFrame = None
-        self._incorrect_lineage_data:dict = defaultdict(list)
 
-        if self._spreadsheet:
-            self.read_spreadshet()
-        # else:
-        #     self.update_original_spreadsheet()
-
-    def read_spreadshet(self) -> None:
+    def read_spreadshet(self, spreadsheet:str) -> None:
+        self._spreadsheet = spreadsheet.replace('"', '')
         try:
             self._original_df = pd.read_excel(self._spreadsheet).reset_index()
-            print('Succes reading the spreadsheet, now entering columns names...')
+            print('Success reading the spreadsheet, now entering columns names...')
         except Exception as e:
-            print('Error reading the spreadsheet: ', e)
-            
-        self.enter_columns_names()   
+            print('Error reading the spreadsheet: ', e)  
 
     # Analyze TAXONOMIES (genus and species)
-    def enter_columns_names(self) -> None:
-        self._column1, self._column2 = input('Digit the name of the Genus and Species columns: ').split()
+    def enter_columns_names(self, genus, species) -> None:
+        self._genus_column = genus
+        self._species_column = species
 
         try: 
-            self._taxons_list = list((self._original_df[self._column1] + ' ' + self._original_df[self._column2]).values)
+            self._taxons_list = list((self._original_df[self._genus_column] + ' ' + self._original_df[self._species_column]).values)
             print('Success loading spreadsheet with given columns names, now connecting to API...')
         except Exception as e:
             print('Error loading spreadsheet with given columns names', e)
-            
-        self.connect_to_api()
 
     def connect_to_api(self) -> None:
         self._json_post = {'names': self._taxons_list,
@@ -54,8 +46,6 @@ class Pytaxon:
             print('Error accessing the OpenTreeOfLife API: ', error)
 
         # pprint(self.r.json())
-
-        self.data_incorrect_taxons()
 
     def data_incorrect_taxons(self) -> None:
         self._matched_names = self.r.json()['matched_names']
@@ -83,8 +73,6 @@ class Pytaxon:
                 self._incorrect_taxon_data['Alternatives'].append(match_names)
                 self._incorrect_taxon_data['Taxon Sources'].append([match['taxon']['tax_sources'] for match in matches])
                 continue
-
-        self.create_taxonomies_pivot_spreadsheet()
         # pprint(dict(self._incorrect_taxon_data))
 
     def create_taxonomies_pivot_spreadsheet(self) -> None:
@@ -94,8 +82,8 @@ class Pytaxon:
         Alternatives1 = []
         Alternatives2 = []
         for i in range(len(self._incorrect_taxon_data['Alternatives'])):
-            result = f"Taxon: {self._incorrect_taxon_data['Alternatives'][i][0]} | Score: {self._incorrect_taxon_data['Matches Scores'][i][0]} | Sources: {self._incorrect_taxon_data['Taxon Sources'][i][0]}"
-            result2 = f"Taxon: {self._incorrect_taxon_data['Alternatives'][i][1]} | Score: {self._incorrect_taxon_data['Matches Scores'][i][1]} | Sources: {self._incorrect_taxon_data['Taxon Sources'][i][1]}"
+            result = f"Species Name: {self._incorrect_taxon_data['Alternatives'][i][0]} | Score: {self._incorrect_taxon_data['Matches Scores'][i][0]} | Sources: {self._incorrect_taxon_data['Taxon Sources'][i][0]}"
+            result2 = f"Species Name: {self._incorrect_taxon_data['Alternatives'][i][1]} | Score: {self._incorrect_taxon_data['Matches Scores'][i][1]} | Sources: {self._incorrect_taxon_data['Taxon Sources'][i][1]}"
             
             Alternatives1.append(result)
             Alternatives2.append(result2)
@@ -113,14 +101,13 @@ class Pytaxon:
             self._df_to_correct.to_excel(f'{self._spreadsheet[:-4]}_por_corrigir.xlsx')
         except Exception as e:
             print('Error creating corrected spreadsheet: ', e)
-        # self.update_original_spreadsheet()
 
     def update_original_spreadsheet(self):
         corrections = self._df_to_correct['Alternative1'].str.split(expand=True)  # Ajeitar
 
 
-        self._original_df.loc[self._incorrect_taxon_data['Error Line'], self._column1] = corrections[1].values
-        self._original_df.loc[self._incorrect_taxon_data['Error Line'], self._column2] = corrections[2].values
+        self._original_df.loc[self._incorrect_taxon_data['Error Line'], self._genus_column] = corrections[1].values
+        self._original_df.loc[self._incorrect_taxon_data['Error Line'], self._species_column] = corrections[2].values
 
         try:
             self._original_df.to_excel(f'{self._spreadsheet[:-4]}_corrigido.xlsx')
