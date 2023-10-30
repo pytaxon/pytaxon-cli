@@ -2,11 +2,13 @@ import pandas as pd
 import requests
 from collections import defaultdict
 from tqdm import tqdm
+import os
 
 
 class Pytaxon:
     def __init__(self):
-        self._spreadsheet:str = None
+        self._path_to_original_spreadsheet:str = None
+        self._name_original_spreadsheet:str = None
         self._original_df:pd.DataFrame = None
 
         # Taxonomy
@@ -15,7 +17,7 @@ class Pytaxon:
         self._taxons_list:list = None
 
         self._json_post:dict = None
-        self.r = None  # 
+        self._r:requests.Request = None  # 
 
         self._matched_names:dict = None
         self._incorrect_taxon_data:defaultdict = defaultdict(list)
@@ -32,6 +34,8 @@ class Pytaxon:
         self._order_column:str = None
         self._class_column:str = None
         self._phylum_column:str = None
+
+        self.incorrect_lineage_data = defaultdict(list)
 
 
     @property
@@ -58,9 +62,11 @@ Choose a option: '''
 
 
     def read_spreadshet(self, spreadsheet:str) -> None:
-        self._spreadsheet = spreadsheet.replace('"', '')
+        self._path_to_original_spreadsheet = spreadsheet.replace('"', '')
+        self._name_original_spreadsheet, extension = os.path.splitext(os.path.basename(self._path_to_original_spreadsheet))
+
         try:
-            self._original_df = pd.read_excel(self._spreadsheet).reset_index()
+            self._original_df = pd.read_excel(self._path_to_original_spreadsheet).reset_index().head(40)  ###
             print('Success reading the spreadsheet, now entering columns names...')
         except Exception as e:
             print('Error reading the spreadsheet: ', e)  
@@ -78,24 +84,24 @@ Choose a option: '''
             print('Error loading spreadsheet with given columns names', e)
 
 
-    def connect_to_api(self) -> None:
+    def connect_to_api_taxony(self) -> None:
         self._json_post = {'names': self._taxons_list,
                            'do_approximate_matching': True,
                            'context_name': 'All life'}
 
         try:
-            self.r = requests.post('https://api.opentreeoflife.org/v3/tnrs/match_names', json=self._json_post)
+            self._r = requests.post('https://api.opentreeoflife.org/v3/tnrs/match_names', json=self._json_post)
             print('Success accessing the OpenTreeOfLife API, now checking taxons...')
         except Exception as error:
             print('Error accessing the OpenTreeOfLife API: ', error)
 
 
     def data_incorrect_taxons(self) -> None:
-        self._matched_names = self.r.json()['matched_names']
+        self._matched_names = self._r.json()['matched_names']
 
         for i in tqdm(range(len(self._matched_names)), desc="Checking taxons from original spreadsheet", ncols=100):
             try:
-                first_match_score = self.r.json()['results'][i]['matches'][0]['score']
+                first_match_score = self._r.json()['results'][i]['matches'][0]['score']
             except:
                 self._incorrect_taxon_data['Error Line'].append(self._matched_names.index(self._matched_names[i], i))
                 self._incorrect_taxon_data['Wrong Taxon'].append(self._matched_names[i])
@@ -106,7 +112,7 @@ Choose a option: '''
                 continue
 
             if first_match_score < 1.:
-                matches = self.r.json()['results'][i]['matches']
+                matches = self._r.json()['results'][i]['matches']
                 match_names  = [match['matched_name'] for match in matches]
 
                 self._incorrect_taxon_data['Error Line'].append(self._matched_names.index(self._matched_names[i], i))
@@ -140,7 +146,7 @@ Choose a option: '''
             })
 
         try:
-            self._df_to_correct.to_excel(f'{self._spreadsheet[:-4]}_por_corrigir.xlsx')
+            self._df_to_correct.to_excel(f'TO_CORRECT_{self._name_original_spreadsheet[:-4]}.xlsx')
             print('Success creating pivot spreadsheet!')
         except Exception as e:
             print('Error creating pivot spreadsheet: ', e)
@@ -149,13 +155,13 @@ Choose a option: '''
     def update_original_spreadsheet(self):
         corrections = self._df_to_correct['Alternative1'].str.split(expand=True)  # Ajeitar
 
-        self._corrected_df = self._original_df
+        self._corrected_df = self._original_df.copy()
 
         self._corrected_df.loc[self._incorrect_taxon_data['Error Line'], self._genus_column] = corrections[1].values
         self._corrected_df.loc[self._incorrect_taxon_data['Error Line'], self._species_column] = corrections[2].values
 
         try:
-            self._corrected_df.to_excel(f'{self._spreadsheet[:-4]}_corrigido.xlsx')
+            self._corrected_df.to_excel(f'CORRECTED_{self._name_original_spreadsheet[:-4]}.xlsx')
         except Exception as e:
             print('Error to update original spreadsheet: ', e)
 
@@ -168,15 +174,37 @@ Choose a option: '''
         self._class_column = class_
         self._phylum_column = phylum
 
-        df_to_be_used = self._corrected_df if self._corrected_df else self._original_df
+        df_to_be_used = self._corrected_df if (self._corrected_df is not None) else self._original_df
 
         try: 
-            self._lineage_dict['tribe'].append(df_to_be_used[self._tribe_column])
-            self._lineage_dict['family'].append(df_to_be_used[self._family_column])
-            self._lineage_dict['order'].append(df_to_be_used[self._order_column])
-            self._lineage_dict['class_'].append(df_to_be_used[self._class_column])
-            self._lineage_dict['phylum'].append(df_to_be_used[self._phylum_column])
+            self._lineage_dict['tribe'] = df_to_be_used[self._tribe_column]
+            self._lineage_dict['family'] = df_to_be_used[self._family_column]
+            self._lineage_dict['order'] = df_to_be_used[self._order_column]
+            self._lineage_dict['class_'] = df_to_be_used[self._class_column]
+            self._lineage_dict['phylum'] = df_to_be_used[self._phylum_column]
 
+            self._lineage_dict = pd.DataFrame(self._lineage_dict)
+            print(self._lineage_dict)
             print('Success loading spreadsheet with given columns names, now connecting to API...')
         except Exception as e:
             print('Error loading spreadsheet with given columns names', e)
+
+
+    def connect_to_api_lineage(self):
+        for i in tqdm(range(len(self._r.json()['matched_names'])), desc="Processando", ncols=100):
+            _json_post = {'ott_id': self._r.json()['results'][i]['matches'][0]['taxon']['ott_id'],  # nome da variavel
+                        'include_lineage': True}
+            
+            r2 = requests.post('https://api.opentreeoflife.org/v3/taxonomy/taxon_info', json=_json_post)
+
+            linhagem = r2.json()['lineage']
+            c = 1 if len(linhagem) == 33 else 0
+            
+            self.incorrect_lineage_data['tribe'].append(linhagem[1 + c]['unique_name'])
+            self.incorrect_lineage_data['family'].append(linhagem[3 + c]['unique_name'])
+            self.incorrect_lineage_data['order'].append(linhagem[10 + c]['unique_name'])
+            self.incorrect_lineage_data['class'].append(linhagem[16 + c]['unique_name'])
+            self.incorrect_lineage_data['phylum'].append(linhagem[20 + c]['unique_name'])
+
+        self.incorrect_lineage_data = pd.DataFrame(self.incorrect_lineage_data)
+        print(self.incorrect_lineage_data)
