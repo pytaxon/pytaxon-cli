@@ -1,7 +1,9 @@
+from collections import defaultdict
+
 import pandas as pd
 import requests
-from collections import defaultdict
 from tqdm import tqdm
+
 import os
 
 
