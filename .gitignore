@@ -2,3 +2,6 @@ __pycache__
 venv
 db
 test
+build
+pytaxon.egg-info
+dist
