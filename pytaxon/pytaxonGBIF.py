@@ -5,7 +5,6 @@ from pprint import pprint
 import pandas as pd
 import requests
 from tqdm import tqdm
-
 from thefuzz import process
 
 
@@ -68,13 +67,13 @@ Choose a option: '''
             False
 
 
-    def read_spreadshet(self, spreadsheet:str) -> None:
-        self._original_spreadsheet_path = spreadsheet.replace('"', '')
+    def read_spreadshet(self, original_spreadsheet:str) -> None:
+        self._original_spreadsheet_path = original_spreadsheet.replace('"', '')
         self._original_spreadsheet = os.path.basename(self._original_spreadsheet_path)
         self._original_spreadsheet_name, _ = os.path.splitext(self._original_spreadsheet)
 
         self._original_df = pd.read_excel(self._original_spreadsheet_path).\
-            reset_index().fillna('xxxxx')[:30]  # CHANGE
+            reset_index().fillna('xxxxx')[:1000]  # CHANGE
 
         print('Spreadsheet read.')
 
@@ -92,13 +91,14 @@ Choose a option: '''
 
 
     def check_species_and_lineage(self) -> None:
-        def compare_data(line, error_type, wrong_data, corrected_data) -> bool:
+
+        def compare_data(line, column_error, wrong_data, corrected_data) -> bool:
             """
             Compares the wrong data with the corrected data and updates the `_incorrect_data` dictionary if they are different.
 
             Args:
                 line: The line number of the error.
-                error_type: The type of error.
+                column_error: Which column has the error.
                 wrong_data: The wrong data.
                 corrected_data: The corrected data.
 
@@ -107,94 +107,41 @@ Choose a option: '''
             """
             if corrected_data != wrong_data:
                 self._incorrect_data['Error Line'].append(line)
-                self._incorrect_data['Error Type'].append(error_type)
+                self._incorrect_data['Error Type'].append(column_error)
                 self._incorrect_data['Wrong Data'].append(wrong_data)
                 self._incorrect_data['Corrected Data'].append(corrected_data)
                 self._incorrect_data['Change'].append('y/n')
 
         species_list = self._original_df[self.species_column[0]]
+        # self._taxons_list = list((self._original_df[self._genus_column] + ' ' + self._original_df[self._species_column]).values)  FOR TEST
 
         for counter in tqdm(range(len(species_list))):
+            if species_list[counter] == 'xxxxx':
+                continue
+
             json_post = {'name': species_list[counter],
                          'verbose': True}
 
             r = requests.get('https://api.gbif.org/v1/species/match', params=json_post)
 
-            compare_data(counter+2, 'Species', self._original_df[self.species_column[0]][counter], r.json()['species'])  # species
-            compare_data(counter+2, 'Kingdom', self._original_df[self.kingdom_column[0]][counter], r.json()['kingdom'])  # kingdom
-            compare_data(counter+2, 'Phylum', self._original_df[self.phylum_column[0]][counter], r.json()['phylum'])  # phylum
-            compare_data(counter+2, 'Class', self._original_df[self.class_column[0]][counter], r.json()['class'])  # class
-            compare_data(counter+2, 'Order', self._original_df[self.order_column[0]][counter], r.json()['order'])  # order
-            compare_data(counter+2, 'Family', self._original_df[self.family_column[0]][counter], r.json()['family'])  # family
+            compare_data(counter+2, self.species_column, self._original_df[self.species_column[0]][counter], r.json()['species'])  # species
+            compare_data(counter+2, self.kingdom_column, self._original_df[self.kingdom_column[0]][counter], r.json()['kingdom'])  # kingdom
+            compare_data(counter+2, self.phylum_column, self._original_df[self.phylum_column[0]][counter], r.json()['phylum'])  # phylum
+            compare_data(counter+2, self.class_column, self._original_df[self.class_column[0]][counter], r.json()['class'])  # class
+            compare_data(counter+2, self.order_column, self._original_df[self.order_column[0]][counter], r.json()['order'])  # order
+            compare_data(counter+2, self.family_column, self._original_df[self.family_column[0]][counter], r.json()['family'])  # family
 
-        pd.DataFrame(self._incorrect_data).to_excel(f'TO_CORRECT_{self._original_spreadsheet_name[:-4]}.xlsx')
-
-
-    def data_incorrect_taxons(self) -> None:
-        self._matched_names = self._r.json()['matched_names']
-        self._unmatched_names = self._r.json()['unmatched_names']
-        results = self._r.json()['results']
-
-        for i in tqdm(range(len(results)), desc="Checking taxons from original spreadsheet", ncols=100):  # ERRO NO MATCHED NAMES
-            try:
-                first_match_score = results[i]['matches'][0]['score']
-            except:
-                if results[i]['name'] == 'xxxxx':
-                    continue
-                self._incorrect_taxon_data['Error Line'].append(results.index(results[i], i) + 2)
-                self._incorrect_taxon_data['Wrong Name'].append(results[i]['name'])
-                self._incorrect_taxon_data['Options'].append('No Correspondence')
-                self._incorrect_taxon_data['Match Score'].append('0')
-                self._incorrect_taxon_data['Alternatives'].append(['No Alternatives'])
-                self._incorrect_taxon_data['Taxon Sources'].append(['No Taxon Sources'])
-                continue
-
-            if first_match_score < 1.:
-                matches = results[i]['matches']
-                match_names = [match['matched_name'] for match in matches]
-
-                self._incorrect_taxon_data['Error Line'].append(results.index(results[i], i) + 2)
-                self._incorrect_taxon_data['Wrong Name'].append(results[i]['name'])
-                self._incorrect_taxon_data['Options'].append((list(range(1, len(match_names)+1))))
-                self._incorrect_taxon_data['Match Score'].append([round(match['score'], 3) for match in matches])
-                self._incorrect_taxon_data['Alternatives'].append(match_names)
-                self._incorrect_taxon_data['Taxon Sources'].append([match['taxon']['tax_sources'] for match in matches])
-                continue
-
-        pprint(self._incorrect_taxon_data)
+        if self._incorrect_data:
+            pd.DataFrame(self._incorrect_data).to_excel(f'TO_CORRECT_{self._original_spreadsheet_name[:-4]}.xlsx')
+        else:
+            print('No errors in spreadsheet')
 
 
-    def create_taxonomies_pivot_spreadsheet(self) -> None:  # change
-        alternatives_list = []
-        for i in tqdm(range(len(self._incorrect_taxon_data['Alternatives'])), desc="Creating pivot spreadsheet", ncols=100):
-            alternatives = f"Species Name: {self._incorrect_taxon_data['Alternatives'][i][0]} | Score: {self._incorrect_taxon_data['Match Score'][i][0]} | Sources: {self._incorrect_taxon_data['Taxon Sources'][i][0]} "
-            if len(self._incorrect_taxon_data['Alternatives'][i]) > 1:
-                alternatives += f"OR 2 - Species Name: {self._incorrect_taxon_data['Alternatives'][i][1]} | Score: {self._incorrect_taxon_data['Match Score'][i][1]} | Sources: {self._incorrect_taxon_data['Taxon Sources'][i][1]}" 
-            
-            alternatives_list.append(alternatives)
+    # def update_original_spreadsheet(self, original_spreadsheet:str, _to_correct_spreadsheet:str):
+    #     self._original_spreadsheet = original_spreadsheet.replace('"', '')
+    #     self._to_correct_spreadsheet = original_spreadsheet.replace('"', '')
 
-        self._df_to_correct = pd.DataFrame(data={  # Refazer
-            'Error Line': list(self._incorrect_taxon_data['Error Line']),
-            'Wrong Name': self._incorrect_taxon_data['Wrong Name'],
-            'Options': self._incorrect_taxon_data['Options'],
-            'Alternatives': alternatives_list  #
-            })
-
-        try:
-            self._df_to_correct.to_excel(f'TO_CORRECT_{self._original_spreadsheet_name[:-4]}.xlsx')
-            print('Success creating pivot spreadsheet!')
-        except Exception as e:
-            print('Error creating pivot spreadsheet: ', e)
-
-
-    def update_original_spreadsheet(self):
-        corrections = self._df_to_correct['Alternatives'].str.split(expand=True)
-        self._corrected_df = self._original_df.copy()
-
-        self._corrected_df.loc[self._incorrect_taxon_data['Error Line'] - 2, self._genus_column] = corrections[4].values  # AJEITAR
-        self._corrected_df.loc[self._incorrect_taxon_data['Error Line'] - 2, self._species_column] = corrections[5].values  # AJEITAR
-
-        try:
-            self._corrected_df.to_excel(f'CORRECTED_{self._original_spreadsheet_name[:-4]}.xlsx')
-        except Exception as e:
-            print('Error to update original spreadsheet: ', e)
+    #     try:
+    #         self._corrected_df.to_excel(f'CORRECTED_{self._original_spreadsheet_name[:-4]}.xlsx')
+    #     except Exception as e:
+    #         print('Error to update original spreadsheet: ', e)
