@@ -6,4 +6,5 @@
 
 - [] Adicionar GENUS na planilha
     - [] Caso não tenha SPECIES, ir para GENUS, senão FAMILY, etc
-    
+
+- [] Escolher entre os serviços do GBIF e OpenTree
