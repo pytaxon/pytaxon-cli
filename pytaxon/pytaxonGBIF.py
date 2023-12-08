@@ -73,18 +73,18 @@ Choose a option: '''
         self._original_spreadsheet_name, _ = os.path.splitext(self._original_spreadsheet)
 
         self._original_df = pd.read_excel(self._original_spreadsheet_path).\
-            reset_index().fillna('xxxxx')[:1000]  # CHANGE
+            reset_index().fillna('xxxxx')[:30]  # CHANGE
 
         print('Spreadsheet read.')
 
 
     def read_columns(self,) -> None:
-        self.species_column = process.extractOne("species", self._original_df.columns)
-        self.kingdom_column = process.extractOne("kingdom", self._original_df.columns)
-        self.phylum_column = process.extractOne("phylum", self._original_df.columns)
-        self.class_column = process.extractOne("class", self._original_df.columns)
-        self.order_column = process.extractOne("order", self._original_df.columns)
-        self.family_column = process.extractOne("family", self._original_df.columns)
+        self.species_column_name = process.extractOne("species", self._original_df.columns)[0]
+        self.kingdom_column_name = process.extractOne("kingdom", self._original_df.columns)[0]
+        self.phylum_column_name = process.extractOne("phylum", self._original_df.columns)[0]
+        self.class_column_name = process.extractOne("class", self._original_df.columns)[0]
+        self.order_column_name = process.extractOne("order", self._original_df.columns)[0]
+        self.family_column_name = process.extractOne("family", self._original_df.columns)[0]
 
         # TODO: make a better print for columns and columns input if error
         print('Columns choosed.')
@@ -92,7 +92,7 @@ Choose a option: '''
 
     def check_species_and_lineage(self) -> None:
 
-        def compare_data(line, column_error, wrong_data, corrected_data) -> bool:
+        def compare_data(line, column_error, wrong_data, corrected_data, id_number) -> bool:
             """
             Compares the wrong data with the corrected data and updates the `_incorrect_data` dictionary if they are different.
 
@@ -110,9 +110,10 @@ Choose a option: '''
                 self._incorrect_data['Error Type'].append(column_error)
                 self._incorrect_data['Wrong Data'].append(wrong_data)
                 self._incorrect_data['Corrected Data'].append(corrected_data)
+                self._incorrect_data['ID Number'].append(id_number)
                 self._incorrect_data['Change'].append('y/n')
 
-        species_list = self._original_df[self.species_column[0]]
+        species_list = self._original_df[self.species_column_name]
         # self._taxons_list = list((self._original_df[self._genus_column] + ' ' + self._original_df[self._species_column]).values)  FOR TEST
 
         for counter in tqdm(range(len(species_list))):
@@ -124,15 +125,15 @@ Choose a option: '''
 
             r = requests.get('https://api.gbif.org/v1/species/match', params=json_post)
 
-            compare_data(counter+2, self.species_column, self._original_df[self.species_column[0]][counter], r.json()['species'])  # species
-            compare_data(counter+2, self.kingdom_column, self._original_df[self.kingdom_column[0]][counter], r.json()['kingdom'])  # kingdom
-            compare_data(counter+2, self.phylum_column, self._original_df[self.phylum_column[0]][counter], r.json()['phylum'])  # phylum
-            compare_data(counter+2, self.class_column, self._original_df[self.class_column[0]][counter], r.json()['class'])  # class
-            compare_data(counter+2, self.order_column, self._original_df[self.order_column[0]][counter], r.json()['order'])  # order
-            compare_data(counter+2, self.family_column, self._original_df[self.family_column[0]][counter], r.json()['family'])  # family
+            compare_data(counter+2, self.species_column_name, self._original_df[self.species_column_name][counter], r.json()['species'], r.json()['speciesKey'])  # species
+            compare_data(counter+2, self.kingdom_column_name, self._original_df[self.kingdom_column_name][counter], r.json()['kingdom'], r.json()['kingdomKey'])  # kingdom
+            compare_data(counter+2, self.phylum_column_name, self._original_df[self.phylum_column_name][counter], r.json()['phylum'], r.json()['phylumKey'])  # phylum
+            compare_data(counter+2, self.class_column_name, self._original_df[self.class_column_name][counter], r.json()['class'], r.json()['classKey'])  # class
+            compare_data(counter+2, self.order_column_name, self._original_df[self.order_column_name][counter], r.json()['order'], r.json()['orderKey'])  # order
+            compare_data(counter+2, self.family_column_name, self._original_df[self.family_column_name][counter], r.json()['family'], r.json()['familyKey'])  # family
 
         if self._incorrect_data:
-            pd.DataFrame(self._incorrect_data).to_excel(f'TO_CORRECT_{self._original_spreadsheet_name[:-4]}.xlsx')
+            pd.DataFrame(self._incorrect_data).to_excel(f'TO_CORRECT_{self._original_spreadsheet_name}.xlsx')
         else:
             print('No errors in spreadsheet')
 
