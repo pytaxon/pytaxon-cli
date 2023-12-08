@@ -5,12 +5,12 @@ import sys
 from pytaxon import Pytaxon_GBIF
 
 def main():
-    if len(sys.argv) == 1:
+    pt = Pytaxon_GBIF()
+    if len(sys.argv) == 2:
         if not pt.connect_to_api:
             print('Could not connect to GBIF API')
             exit()
 
-        pt = Pytaxon_GBIF()
         print(pt.logo)
         pt.read_spreadshet(sys.argv[1])
         pt.read_columns()
