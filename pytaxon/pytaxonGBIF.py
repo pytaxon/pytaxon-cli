@@ -110,7 +110,7 @@ Choose a option: '''
                 self._incorrect_data['Error Type'].append(column_error)
                 self._incorrect_data['Wrong Data'].append(wrong_data)
                 self._incorrect_data['Corrected Data'].append(corrected_data)
-                self._incorrect_data['ID Number'].append(id_number)
+                self._incorrect_data['ID Number'].append(f'=HYPERLINK("https://www.gbif.org/occurrence/search?taxon_key={id_number}", "{id_number}")')
                 self._incorrect_data['Change'].append('y/n')
 
         species_list = self._original_df[self.species_column_name]
@@ -133,7 +133,10 @@ Choose a option: '''
             compare_data(counter+2, self.family_column_name, self._original_df[self.family_column_name][counter], r.json()['family'], r.json()['familyKey'])  # family
 
         if self._incorrect_data:
-            pd.DataFrame(self._incorrect_data).to_excel(f'TO_CORRECT_{self._original_spreadsheet_name}.xlsx')
+            self._corrected_df = pd.DataFrame(self._incorrect_data).style.map(\
+                lambda x: f'color: blue; text-decoration: underline;', subset=['ID Number'])
+            
+            self._corrected_df.to_excel(f'TO_CORRECT_{self._original_spreadsheet_name}.xlsx')
         else:
             print('No errors in spreadsheet')
 
