@@ -5,17 +5,18 @@ from pprint import pprint
 import pandas as pd
 import requests
 from tqdm import tqdm
+from thefuzz import process
 
 
-class Pytaxon:
+class Pytaxon_OTT:
     def __init__(self):
         self._path_to_original_spreadsheet:str = None
         self._name_original_spreadsheet:str = None
         self._original_df:pd.DataFrame = None
 
         # Taxonomy
-        self._genus_column:str = None
-        self._species_column:str = None
+        self.genus_column_name:str = None
+        self.species_column_name:str = None
         self._taxons_list:list = None
 
         self._json_post:dict = None
@@ -62,25 +63,31 @@ class Pytaxon:
 [4] Correct original spreadsheet through pivot
 Choose a option: '''
 
+    def connect_to_api(self) -> None:
+        if requests.get('https://api.opentreeoflife.org/v3/tnrs/match_names').status_code() == 200: 
+            True
+        else: 
+            False
+
 
     def read_spreadshet(self, spreadsheet:str) -> None:
         self._path_to_original_spreadsheet = spreadsheet.replace('"', '')
         self._name_original_spreadsheet, extension = os.path.splitext(os.path.basename(self._path_to_original_spreadsheet))
 
         try:
-            self._original_df = pd.read_excel(self._path_to_original_spreadsheet).reset_index().head(40)  ###
+            self._original_df = pd.read_excel(self._path_to_original_spreadsheet).reset_index().head(999)  ###
             print('Success reading the spreadsheet, now entering columns names...')
         except Exception as e:
             print('Error reading the spreadsheet: ', e)  
 
 
     #  T A X O N O M I E S
-    def read_taxon_columns(self, genus:str, species:str) -> None:
-        self._genus_column = genus
-        self._species_column = species
+    def read_taxon_columns(self) -> None:
+        self.species_column_name = process.extractOne("species", self._original_df.columns)[0]
+        self.genus_column_name = process.extractOne("genus", self._original_df.columns)[0]
 
         try: 
-            self._taxons_list = list((self._original_df[self._genus_column] + ' ' + self._original_df[self._species_column]).values)
+            self._taxons_list = list((self._original_df[self.genus_column_name] + ' ' + self._original_df[self.species_column_name]).values)
             print('Success loading spreadsheet with given columns names, now connecting to API...')
         except Exception as e:
             print('Error loading spreadsheet with given columns names', e)
@@ -159,8 +166,8 @@ Choose a option: '''
 
         self._corrected_df = self._original_df.copy()
 
-        self._corrected_df.loc[self._incorrect_taxon_data['Error Line'], self._genus_column] = corrections[1].values
-        self._corrected_df.loc[self._incorrect_taxon_data['Error Line'], self._species_column] = corrections[2].values
+        self._corrected_df.loc[self._incorrect_taxon_data['Error Line'], self.genus_column_name] = corrections[1].values
+        self._corrected_df.loc[self._incorrect_taxon_data['Error Line'], self.species_column_name] = corrections[2].values
 
         try:
             self._corrected_df.to_excel(f'CORRECTED_{self._name_original_spreadsheet[:-4]}.xlsx')
