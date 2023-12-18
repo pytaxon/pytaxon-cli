@@ -8,7 +8,7 @@ with open('README.md', 'r', encoding='utf-8') as arq:
 
 setup(
     name='pytaxon',
-    version='1.1.1',
+    version='2.0.0',
     setup_requires=['wheel'],
     license='MIT License',
     author='Marco Aurélio Proença Neto, Marcos Paulo Alves de Sousa',
@@ -23,6 +23,6 @@ setup(
             'pytaxon = pytaxon.pytaxon:main',
         ],
     },
-    install_requires=['pandas', 'openpyxl', 'tqdm', 'xlrd', 'thefuzz', 'requests'],
+    install_requires=['pandas', 'openpyxl', 'tqdm', 'xlrd', 'thefuzz', 'requests', 'argparse'],
     url='https://github.com/pytaxon'
 )
