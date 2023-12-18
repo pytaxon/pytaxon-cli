@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 from pprint import pprint
+import time
 
 import pandas as pd
 import requests
@@ -9,7 +10,6 @@ from thefuzz import process
 
 
 class Pytaxon_GBIF:
-    # GBIF API
     def __init__(self):
         self._original_spreadsheet_path:str = None
         self._original_spreadsheet:str = None
@@ -24,19 +24,8 @@ class Pytaxon_GBIF:
         self._family_column:str = None
         self._incorrect_data:defaultdict = defaultdict(list)
 
-        self._matched_names:dict = None
-        self._incorrect_taxon_data:defaultdict = defaultdict(list)
-
-        self._df_to_correct:pd.DataFrame = None
-        self._corrected_df = None
-        self._lineage_dict = dict
-        self._incorrect_lineage_data:defaultdict = defaultdict(list)
-
-        # Lineage
-        self._lineage_dict:defaultdict = defaultdict(list)  #
-        
-
-        self.incorrect_lineage_data = defaultdict(list)
+        print(self.logo)
+        self.connect_to_GBIF_api()
 
 
     @property
@@ -60,25 +49,30 @@ class Pytaxon_GBIF:
 Choose a option: '''
 
 
-    def connect_to_api(self) -> None:
-        if requests.get('https://api.gbif.org/v1/species/match').status_code() == 200: 
-            True
-        else: 
-            False
+    def connect_to_GBIF_api(self) -> None:
+        if  requests.get('https://api.gbif.org/v1/species/match').status_code != 200:
+            print("Could not connect to GBIF api")
+            exit()
+        else:
+            print("Connected to GBIF api")
+        time.sleep(1)
 
 
-    def read_spreadshet(self, original_spreadsheet:str) -> None:
-        self._original_spreadsheet_path = original_spreadsheet.replace('"', '')
-        self._original_spreadsheet = os.path.basename(self._original_spreadsheet_path)
-        self._original_spreadsheet_name, _ = os.path.splitext(self._original_spreadsheet)
+    def read_spreadshet(self, original_spreadsheet:str) -> tuple:
+        original_spreadsheet_path = original_spreadsheet.replace('"', '')
+        original_spreadsheet = os.path.basename(original_spreadsheet_path)
+        self._original_spreadsheet_name, _ = os.path.splitext(original_spreadsheet)
 
-        self._original_df = pd.read_excel(self._original_spreadsheet_path).\
-            reset_index().fillna('xxxxx')[:30]  # CHANGE
+        self._original_df = pd.read_excel(original_spreadsheet_path).\
+            reset_index().fillna('')[:30]  # CHANGE
 
-        print('Spreadsheet read.')
+        print(f'Spreadsheet {self._original_spreadsheet_name} read.')
+        time.sleep(1)
+
+        return self._original_spreadsheet_name, self._original_df
 
 
-    def read_columns(self,) -> None:
+    def read_columns(self) -> None:
         self.species_column_name = process.extractOne("species", self._original_df.columns)[0]
         self.kingdom_column_name = process.extractOne("kingdom", self._original_df.columns)[0]
         self.phylum_column_name = process.extractOne("phylum", self._original_df.columns)[0]
@@ -86,7 +80,6 @@ Choose a option: '''
         self.order_column_name = process.extractOne("order", self._original_df.columns)[0]
         self.family_column_name = process.extractOne("family", self._original_df.columns)[0]
 
-        # TODO: make a better print for columns and columns input if error
         print('Columns choosed.')
 
 
@@ -110,14 +103,14 @@ Choose a option: '''
                 self._incorrect_data['Error Type'].append(column_error)
                 self._incorrect_data['Wrong Data'].append(wrong_data)
                 self._incorrect_data['Corrected Data'].append(corrected_data)
-                self._incorrect_data['ID Number'].append(f'=HYPERLINK("https://www.gbif.org/occurrence/search?taxon_key={id_number}", "{id_number}")')
+                self._incorrect_data['ID Number'].append(f'=HYPERLINK("https://www.gbif.org/species/{id_number}", "{id_number}")')
                 self._incorrect_data['Change'].append('y/n')
 
         species_list = self._original_df[self.species_column_name]
         # self._taxons_list = list((self._original_df[self._genus_column] + ' ' + self._original_df[self._species_column]).values)  FOR TEST
 
         for counter in tqdm(range(len(species_list))):
-            if species_list[counter] == 'xxxxx':
+            if species_list[counter] == '':
                 continue
 
             json_post = {'name': species_list[counter],
@@ -133,19 +126,27 @@ Choose a option: '''
             compare_data(counter+2, self.family_column_name, self._original_df[self.family_column_name][counter], r.json()['family'], r.json()['familyKey'])  # family
 
         if self._incorrect_data:
-            self._corrected_df = pd.DataFrame(self._incorrect_data).style.map(\
-                lambda x: f'color: blue; text-decoration: underline;', subset=['ID Number'])
-            
-            self._corrected_df.to_excel(f'TO_CORRECT_{self._original_spreadsheet_name}.xlsx')
+            self._to_correct_df = pd.DataFrame(self._incorrect_data).style.map(
+                lambda x: 'color: blue; text-decoration: underline;',
+                subset=['ID Number'],
+            )
+
+            self._to_correct_df.to_excel(f'TO_CORRECT_{self._original_spreadsheet_name}.xlsx')
         else:
             print('No errors in spreadsheet')
 
 
-    # def update_original_spreadsheet(self, original_spreadsheet:str, _to_correct_spreadsheet:str):
-    #     self._original_spreadsheet = original_spreadsheet.replace('"', '')
-    #     self._to_correct_spreadsheet = original_spreadsheet.replace('"', '')
+    def update_original_spreadsheet(self, original_spreadsheet:str, to_correct_spreadsheet:str):
+        original_data_name, original_data_df = self.read_spreadshet(original_spreadsheet)
+        to_correct_data_name, to_correct_df = self.read_spreadshet(to_correct_spreadsheet)
 
-    #     try:
-    #         self._corrected_df.to_excel(f'CORRECTED_{self._original_spreadsheet_name[:-4]}.xlsx')
-    #     except Exception as e:
-    #         print('Error to update original spreadsheet: ', e)
+        for index, row in to_correct_df.iterrows():
+            if row['Change'] == 'y':
+                original_data_df.at[row['Error Line']-2, row['Error Type']] = row['Corrected Data']
+        
+        self._corrected_spreadsheet = original_data_df.copy()
+
+        try:
+            self._corrected_spreadsheet.to_excel(f'CORRECTED_{original_data_name}.xlsx')
+        except Exception as e:
+            print('Error to update original spreadsheet: ', e)
