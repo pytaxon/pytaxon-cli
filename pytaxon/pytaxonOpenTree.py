@@ -149,6 +149,16 @@ Choose a option: '''
                     subset=['OTT ID Source'],
                 )
 
-                self._to_correct_df.to_excel(f'TO_CORRECT_{self._original_spreadsheet_name}.xlsx')
+                new_corrected_spreadhseet_name = f'TO_CORRECT_{self._original_spreadsheet_name}'
+                while True:
+                    print(f'New corrected spreadsheet name: {new_corrected_spreadhseet_name}')
+                    change_name = input('Wish to change? [y/n]: ')
+
+                    if change_name.lower() == 'y':
+                        new_corrected_spreadhseet_name = input('Digit the new corrected spreadsheet name: ')
+                    else:
+                        break
+
+                self._to_correct_df.to_excel(f'{new_corrected_spreadhseet_name}.xlsx')
             else:
                 print('No errors in spreadsheet')
