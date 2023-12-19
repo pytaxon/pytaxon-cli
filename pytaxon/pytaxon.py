@@ -22,16 +22,9 @@ def main():  # sourcery skip: extract-method
 
     elif args.ott:
         pt = Pytaxon_OTT()
-        print(pt.logo)
-        if not pt.connect_to_api:
-            print('Could not connect to OpenTree API')
-            exit()
-
         pt.read_spreadshet(args.ott)
-        pt.read_taxon_columns()
-        pt.connect_to_api_taxony()
-        pt.data_incorrect_taxons()
-        pt.create_taxonomies_pivot_spreadsheet()
+        pt.read_columns()
+        pt.check_species_and_lineage()
 
     elif args.od and args.cd:
         pt = Pytaxon_GBIF()

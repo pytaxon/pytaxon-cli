@@ -6,39 +6,26 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 from thefuzz import process
+import time
 
 
 class Pytaxon_OTT:
     def __init__(self):
-        self._path_to_original_spreadsheet:str = None
-        self._name_original_spreadsheet:str = None
+        self._original_spreadsheet_path:str = None
+        self._original_spreadsheet:str = None
+        self._original_spreadsheet_name:str = None
         self._original_df:pd.DataFrame = None
 
-        # Taxonomy
-        self.genus_column_name:str = None
-        self.species_column_name:str = None
-        self._taxons_list:list = None
-
-        self._json_post:dict = None
-        self._r:requests.Request = None  # 
-
-        self._matched_names:dict = None
-        self._incorrect_taxon_data:defaultdict = defaultdict(list)
-
-        self._df_to_correct:pd.DataFrame = None
-        self._corrected_df = None
-        self._lineage_dict = dict
-        self._incorrect_lineage_data:defaultdict = defaultdict(list)
-
-        # Lineage
-        self._lineage_dict:defaultdict = defaultdict(list)
-        self._tribe_column:str = None
-        self._family_column:str = None
-        self._order_column:str = None
-        self._class_column:str = None
+        self._species_column:str = None
+        self._kingdom_column:str = None
         self._phylum_column:str = None
+        self._class_column:str = None
+        self._order_column:str = None
+        self._family_column:str = None
+        self._incorrect_data:defaultdict = defaultdict(list)
 
-        self.incorrect_lineage_data = defaultdict(list)
+        print(self.logo)
+        self.connect_to_OTT_api()
 
 
     @property
@@ -52,7 +39,7 @@ class Pytaxon_OTT:
 \033[32m88`YbbdP"'       Y88'   \033[m\033[33m    "Y888  `"8bbdP"Y8  8P'     `Y8  `"YbbdP"'   88       88\033[m  
 \033[32m88               d8'    \033[m                                                             
 \033[32m88              d8' \033[m
-                            Taxonomy and Lineage Checker\n'''
+                         Taxonomy and Lineage Checker - OTT API\n'''
     
 
     @property
@@ -63,157 +50,84 @@ class Pytaxon_OTT:
 [4] Correct original spreadsheet through pivot
 Choose a option: '''
 
-    def connect_to_api(self) -> None:
-        if requests.get('https://api.opentreeoflife.org/v3/tnrs/match_names').status_code() == 200: 
-            True
-        else: 
-            False
+
+    def connect_to_OTT_api(self) -> None:        
+        if requests.get('https://api.opentreeoflife.org/v3/tnrs/match_names').status_code == 200: 
+            print("Could not connect to OTT api")
+            exit()
+        else:
+            print("Connected to OTT api")
+        time.sleep(1)
 
 
-    def read_spreadshet(self, spreadsheet:str) -> None:
-        self._path_to_original_spreadsheet = spreadsheet.replace('"', '')
-        self._name_original_spreadsheet, extension = os.path.splitext(os.path.basename(self._path_to_original_spreadsheet))
+    def read_spreadshet(self, original_spreadsheet:str) -> tuple:
+        original_spreadsheet_path = original_spreadsheet.replace('"', '')
+        original_spreadsheet = os.path.basename(original_spreadsheet_path)
+        self._original_spreadsheet_name, _ = os.path.splitext(original_spreadsheet)
 
-        try:
-            self._original_df = pd.read_excel(self._path_to_original_spreadsheet).reset_index().head(999)  ###
-            print('Success reading the spreadsheet, now entering columns names...')
-        except Exception as e:
-            print('Error reading the spreadsheet: ', e)  
+        self._original_df = pd.read_excel(original_spreadsheet_path).\
+            reset_index().fillna('')[:30]  # CHANGE
+
+        print(f'Spreadsheet {self._original_spreadsheet_name} read.')
+        time.sleep(1)
+
+        return self._original_spreadsheet_name, self._original_df
 
 
-    #  T A X O N O M I E S
-    def read_taxon_columns(self) -> None:
+    def read_columns(self) -> None:
         self.species_column_name = process.extractOne("species", self._original_df.columns)[0]
-        self.genus_column_name = process.extractOne("genus", self._original_df.columns)[0]
+        self.phylum_column_name = process.extractOne("phylum", self._original_df.columns)[0]
+        self.class_column_name = process.extractOne("class", self._original_df.columns)[0]
+        self.order_column_name = process.extractOne("order", self._original_df.columns)[0]
+        self.family_column_name = process.extractOne("family", self._original_df.columns)[0]
 
-        try: 
-            self._taxons_list = list((self._original_df[self.genus_column_name] + ' ' + self._original_df[self.species_column_name]).values)
-            print('Success loading spreadsheet with given columns names, now connecting to API...')
-        except Exception as e:
-            print('Error loading spreadsheet with given columns names', e)
+        print('Columns choosed.')
 
+     
+    def check_species_and_lineage(self) -> None:
 
-    def connect_to_api_taxony(self) -> None:
-        self._json_post = {'names': self._taxons_list,
-                           'do_approximate_matching': True,
-                           'context_name': 'All life'}
+            def compare_data(line, column_error, wrong_data, corrected_data, id_number) -> bool:
+                if corrected_data != wrong_data:
+                    self._incorrect_data['Error Line'].append(line)
+                    self._incorrect_data['Error Type'].append(column_error)
+                    self._incorrect_data['Wrong Name'].append(wrong_data)
+                    self._incorrect_data['Suggested Name'].append(corrected_data)
+                    self._incorrect_data['ID Source'].append(f'=HYPERLINK("https://tree.opentreeoflife.org/taxonomy/browse?id={id_number}", "OTT: {id_number}")')
+                    self._incorrect_data['Change'].append('y/n')
 
-        try:
-            self._r = requests.post('https://api.opentreeoflife.org/v3/tnrs/match_names', json=self._json_post)
-            print('Success accessing the OpenTreeOfLife API, now checking taxons...')
-        except Exception as error:
-            print('Error accessing the OpenTreeOfLife API: ', error)
+            species_list = self._original_df[self.species_column_name]
 
+            for counter in tqdm(range(len(species_list))):
+                if species_list[counter] == '':
+                    continue
 
-    def data_incorrect_taxons(self) -> None:
-        self._matched_names = self._r.json()['matched_names']
+                json_post = {'names': [species_list[counter]],
+                            'do_approximate_matching': True,
+                            'context_name': 'All life'}
 
-        for i in tqdm(range(len(self._matched_names)), desc="Checking taxons from original spreadsheet", ncols=100):
-            try:
-                first_match_score = self._r.json()['results'][i]['matches'][0]['score']
-            except:
-                self._incorrect_taxon_data['Error Line'].append(self._matched_names.index(self._matched_names[i], i))
-                self._incorrect_taxon_data['Wrong Taxon'].append(self._matched_names[i])
-                self._incorrect_taxon_data['Options'].append('No Correspondence')
-                self._incorrect_taxon_data['Match Score'].append(0)
-                self._incorrect_taxon_data['Alternatives'].append(None)
-                self._incorrect_taxon_data['Taxon Sources'].append(None)
-                continue
+                r_name = requests.post('https://api.opentreeoflife.org/v3/tnrs/match_names', json=json_post)
+                
+                ott_id = r_name.json()['results'][0]['matches'][0]['taxon']['ott_id']
+                
+                _json_post = {'ott_id': ott_id, 'include_lineage': True}
 
-            if first_match_score < 1.:
-                matches = self._r.json()['results'][i]['matches']
-                match_names  = [match['matched_name'] for match in matches]
+                r_id = requests.post('https://api.opentreeoflife.org/v3/taxonomy/taxon_info', json=_json_post)
 
-                self._incorrect_taxon_data['Error Line'].append(self._matched_names.index(self._matched_names[i], i))
-                self._incorrect_taxon_data['Wrong Taxon'].append(self._matched_names[i])
-                self._incorrect_taxon_data['Options'].append((list(range(1, len(match_names)+1))))
-                self._incorrect_taxon_data['Matches Scores'].append([round(match['score'], 3) for match in matches])
-                self._incorrect_taxon_data['Alternatives'].append(match_names)
-                self._incorrect_taxon_data['Taxon Sources'].append([match['taxon']['tax_sources'] for match in matches])
-                continue
+                lineage = r_id.json()['lineage']
+                c = 1 if len(lineage) == 33 else 0
 
+                compare_data(counter+2, self.species_column_name, self._original_df[self.species_column_name][counter], r_name.json()['results'][0]['matches'][0]['matched_name'], r_name.json()['results'][0]['matches'][0]['taxon']['ott_id'])  # species
+                compare_data(counter+2, self.phylum_column_name, self._original_df[self.phylum_column_name][counter], lineage[20 + c]['unique_name'], lineage[20 + c]['ott_id'])  # phylum
+                compare_data(counter+2, self.class_column_name, self._original_df[self.class_column_name][counter], lineage[16 + c]['unique_name'], lineage[16 + c]['ott_id'])  # class
+                compare_data(counter+2, self.order_column_name, self._original_df[self.order_column_name][counter], lineage[10 + c]['unique_name'], lineage[10 + c]['ott_id'])  # order
+                compare_data(counter+2, self.family_column_name, self._original_df[self.family_column_name][counter], lineage[3 + c]['unique_name'], lineage[3 + c]['ott_id'])  # family
 
-    def create_taxonomies_pivot_spreadsheet(self) -> None:
-        def sum2(num):
-            return num + 2
-        
-        Alternatives1 = []
-        Alternatives2 = []
-        for i in tqdm(range(len(self._incorrect_taxon_data['Alternatives'])), desc="Creating pivot spreadsheet", ncols=100):
-            result = f"Species Name: {self._incorrect_taxon_data['Alternatives'][i][0]} | Score: {self._incorrect_taxon_data['Matches Scores'][i][0]} | Sources: {self._incorrect_taxon_data['Taxon Sources'][i][0]}"
-            result2 = f"Species Name: {self._incorrect_taxon_data['Alternatives'][i][1]} | Score: {self._incorrect_taxon_data['Matches Scores'][i][1]} | Sources: {self._incorrect_taxon_data['Taxon Sources'][i][1]}"
-            
-            Alternatives1.append(result)
-            Alternatives2.append(result2)
+            if self._incorrect_data:
+                self._to_correct_df = pd.DataFrame(self._incorrect_data).style.map(
+                    lambda x: 'color: blue; text-decoration: underline;',
+                    subset=['ID Number'],
+                )
 
-        self._df_to_correct = pd.DataFrame(data={  # Refazer
-            'Error Line': list(map(sum2, self._incorrect_taxon_data['Error Line'])),
-            'Wrong Taxon': self._incorrect_taxon_data['Wrong Taxon'],
-            'Options': self._incorrect_taxon_data['Options'],
-            'Alternative1': Alternatives1,
-            'Alternative2': Alternatives2
-            })
-
-        try:
-            self._df_to_correct.to_excel(f'TO_CORRECT_{self._name_original_spreadsheet[:-4]}.xlsx')
-            print('Success creating pivot spreadsheet!')
-        except Exception as e:
-            print('Error creating pivot spreadsheet: ', e)
-
-
-    def update_original_spreadsheet(self):
-        corrections = self._df_to_correct['Alternative1'].str.split(expand=True)  # Ajeitar
-
-        self._corrected_df = self._original_df.copy()
-
-        self._corrected_df.loc[self._incorrect_taxon_data['Error Line'], self.genus_column_name] = corrections[1].values
-        self._corrected_df.loc[self._incorrect_taxon_data['Error Line'], self.species_column_name] = corrections[2].values
-
-        try:
-            self._corrected_df.to_excel(f'CORRECTED_{self._name_original_spreadsheet[:-4]}.xlsx')
-        except Exception as e:
-            print('Error to update original spreadsheet: ', e)
-
-
-    #  L I N E A G E
-    def read_lineage_columns(self, tribe, family, order, class_, phylum) -> None:
-        self._tribe_column = tribe
-        self._family_column = family
-        self._order_column = order
-        self._class_column = class_
-        self._phylum_column = phylum
-
-        df_to_be_used = self._corrected_df if (self._corrected_df is not None) else self._original_df
-
-        try: 
-            self._lineage_dict['tribe'] = df_to_be_used[self._tribe_column]
-            self._lineage_dict['family'] = df_to_be_used[self._family_column]
-            self._lineage_dict['order'] = df_to_be_used[self._order_column]
-            self._lineage_dict['class_'] = df_to_be_used[self._class_column]
-            self._lineage_dict['phylum'] = df_to_be_used[self._phylum_column]
-
-            self._lineage_dict = pd.DataFrame(self._lineage_dict)
-            print(self._lineage_dict)
-            print('Success loading spreadsheet with given columns names, now connecting to API...')
-        except Exception as e:
-            print('Error loading spreadsheet with given columns names', e)
-
-
-    def connect_to_api_lineage(self):
-        for i in tqdm(range(len(self._r.json()['matched_names'])), desc="Processando", ncols=100):
-            _json_post = {'ott_id': self._r.json()['results'][i]['matches'][0]['taxon']['ott_id'],  # nome da variavel
-                        'include_lineage': True}
-            
-            r2 = requests.post('https://api.opentreeoflife.org/v3/taxonomy/taxon_info', json=_json_post)
-
-            linhagem = r2.json()['lineage']
-            c = 1 if len(linhagem) == 33 else 0
-            
-            self.incorrect_lineage_data['tribe'].append(linhagem[1 + c]['unique_name'])
-            self.incorrect_lineage_data['family'].append(linhagem[3 + c]['unique_name'])
-            self.incorrect_lineage_data['order'].append(linhagem[10 + c]['unique_name'])
-            self.incorrect_lineage_data['class'].append(linhagem[16 + c]['unique_name'])
-            self.incorrect_lineage_data['phylum'].append(linhagem[20 + c]['unique_name'])
-
-        self.incorrect_lineage_data = pd.DataFrame(self.incorrect_lineage_data)
-        print(self.incorrect_lineage_data)
+                self._to_correct_df.to_excel(f'TO_CORRECT_{self._original_spreadsheet_name}.xlsx')
+            else:
+                print('No errors in spreadsheet')
