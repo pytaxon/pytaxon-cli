@@ -103,7 +103,7 @@ Choose a option: '''
                 self._incorrect_data['Error Type'].append(column_error)
                 self._incorrect_data['Wrong Name'].append(wrong_data)
                 self._incorrect_data['Suggested Name'].append(corrected_data)
-                self._incorrect_data['ID Source'].append(f'=HYPERLINK("https://www.gbif.org/species/{id_number}", "GBIF: {id_number}")')
+                self._incorrect_data['GBIF ID Source'].append(f'=HYPERLINK("https://www.gbif.org/species/{id_number}", "{id_number}")')
                 self._incorrect_data['Change'].append('y/n')
 
         species_list = self._original_df[self.species_column_name]
@@ -128,7 +128,7 @@ Choose a option: '''
         if self._incorrect_data:
             self._to_correct_df = pd.DataFrame(self._incorrect_data).style.map(
                 lambda x: 'color: blue; text-decoration: underline;',
-                subset=['ID Number'],
+                subset=['GBIF ID Number'],
             )
 
             self._to_correct_df.to_excel(f'TO_CORRECT_{self._original_spreadsheet_name}.xlsx')
