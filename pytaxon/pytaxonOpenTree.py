@@ -75,11 +75,32 @@ Choose a option: '''
 
 
     def read_columns(self) -> None:
-        self.species_column_name = process.extractOne("species", self._original_df.columns)[0]
-        self.phylum_column_name = process.extractOne("phylum", self._original_df.columns)[0]
-        self.class_column_name = process.extractOne("class", self._original_df.columns)[0]
-        self.order_column_name = process.extractOne("order", self._original_df.columns)[0]
-        self.family_column_name = process.extractOne("family", self._original_df.columns)[0]
+        self.column_vars = [
+            process.extractOne("species", self._original_df.columns)[0],
+            process.extractOne("phylum", self._original_df.columns)[0],
+            process.extractOne("class", self._original_df.columns)[0],
+            process.extractOne("order", self._original_df.columns)[0],
+            process.extractOne("family", self._original_df.columns)[0]
+        ] 
+
+        while True:
+            for i, column in enumerate(self.column_vars):
+                print(f'{i}): {column}')
+            change_column = int(input('Do you wish to change any? [0, 1, 2, 3, 4, -1 (exit)]: '))
+
+            if change_column == -1:
+                break
+            elif change_column in [0,1,2,3,4]:
+                new_column_name = input(f'Digit the new {self.column_vars[change_column]} column name: ')
+                if new_column_name in self._original_df.columns:
+                    self.column_vars[change_column] = new_column_name
+                    print(f'{self.column_vars[change_column]} changed to {new_column_name}')
+                else:
+                    print('Invalid column name')
+                continue
+            else:
+                print('Invalid option')
+                continue
 
         print('Columns choosed.')
 
@@ -95,7 +116,7 @@ Choose a option: '''
                     self._incorrect_data['OTT ID Source'].append(f'=HYPERLINK("https://tree.opentreeoflife.org/taxonomy/browse?id={id_number}", "{id_number}")')
                     self._incorrect_data['Change'].append('y/n')
 
-            species_list = self._original_df[self.species_column_name]
+            species_list = self._original_df[self.column_vars[0]]
 
             for counter in tqdm(range(len(species_list))):
                 if species_list[counter] == '':
@@ -116,16 +137,16 @@ Choose a option: '''
                 lineage = r_id.json()['lineage']
                 c = 1 if len(lineage) == 33 else 0
 
-                compare_data(counter+2, self.species_column_name, self._original_df[self.species_column_name][counter], r_name.json()['results'][0]['matches'][0]['matched_name'], r_name.json()['results'][0]['matches'][0]['taxon']['ott_id'])  # species
-                compare_data(counter+2, self.phylum_column_name, self._original_df[self.phylum_column_name][counter], lineage[20 + c]['unique_name'], lineage[20 + c]['ott_id'])  # phylum
-                compare_data(counter+2, self.class_column_name, self._original_df[self.class_column_name][counter], lineage[16 + c]['unique_name'], lineage[16 + c]['ott_id'])  # class
-                compare_data(counter+2, self.order_column_name, self._original_df[self.order_column_name][counter], lineage[10 + c]['unique_name'], lineage[10 + c]['ott_id'])  # order
-                compare_data(counter+2, self.family_column_name, self._original_df[self.family_column_name][counter], lineage[3 + c]['unique_name'], lineage[3 + c]['ott_id'])  # family
+                compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], r_name.json()['results'][0]['matches'][0]['matched_name'], r_name.json()['results'][0]['matches'][0]['taxon']['ott_id'])  # species
+                compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage[20 + c]['unique_name'], lineage[20 + c]['ott_id'])  # phylum
+                compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage[16 + c]['unique_name'], lineage[16 + c]['ott_id'])  # class
+                compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage[10 + c]['unique_name'], lineage[10 + c]['ott_id'])  # order
+                compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage[3 + c]['unique_name'], lineage[3 + c]['ott_id'])  # family
 
             if self._incorrect_data:
                 self._to_correct_df = pd.DataFrame(self._incorrect_data).style.map(
                     lambda x: 'color: blue; text-decoration: underline;',
-                    subset=['OTT ID Number'],
+                    subset=['OTT ID Source'],
                 )
 
                 self._to_correct_df.to_excel(f'TO_CORRECT_{self._original_spreadsheet_name}.xlsx')
