@@ -50,7 +50,7 @@ Choose a option: '''
 
 
     def connect_to_GBIF_api(self) -> None:
-        if  requests.get('https://api.gbif.org/v1/species/match').status_code != 200:
+        if requests.get('https://api.gbif.org/v1/species/match').status_code != 200:
             print("Could not connect to GBIF api")
             exit()
         else:
@@ -101,9 +101,9 @@ Choose a option: '''
             if corrected_data != wrong_data:
                 self._incorrect_data['Error Line'].append(line)
                 self._incorrect_data['Error Type'].append(column_error)
-                self._incorrect_data['Wrong Data'].append(wrong_data)
-                self._incorrect_data['Corrected Data'].append(corrected_data)
-                self._incorrect_data['ID Number'].append(f'=HYPERLINK("https://www.gbif.org/species/{id_number}", "{id_number}")')
+                self._incorrect_data['Wrong Name'].append(wrong_data)
+                self._incorrect_data['Suggested Name'].append(corrected_data)
+                self._incorrect_data['ID Source'].append(f'=HYPERLINK("https://www.gbif.org/species/{id_number}", "GBIF: {id_number}")')
                 self._incorrect_data['Change'].append('y/n')
 
         species_list = self._original_df[self.species_column_name]
