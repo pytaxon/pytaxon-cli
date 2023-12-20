@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 from pprint import pprint
+import ast
 
 import pandas as pd
 import requests
@@ -42,15 +43,6 @@ class Pytaxon_OTT:
                          Taxonomy and Lineage Checker - OTT API\n'''
     
 
-    @property
-    def menu(self):
-        return '''[1] Check TAXONOMIES (species name) and create a pivot
-[2] Correct original spreadsheet through pivot
-[3] Check LINEAGE and create a pivot
-[4] Correct original spreadsheet through pivot
-Choose a option: '''
-
-
     def connect_to_OTT_api(self) -> None:        
         if requests.get('https://api.opentreeoflife.org/v3/tnrs/match_names').status_code == 200: 
             print("Could not connect to OTT api")
@@ -74,91 +66,59 @@ Choose a option: '''
         return self._original_spreadsheet_name, self._original_df
 
 
-    def read_columns(self) -> None:
-        self.column_vars = [
-            process.extractOne("species", self._original_df.columns)[0],
-            process.extractOne("phylum", self._original_df.columns)[0],
-            process.extractOne("class", self._original_df.columns)[0],
-            process.extractOne("order", self._original_df.columns)[0],
-            process.extractOne("family", self._original_df.columns)[0]
-        ] 
+    def read_columns(self, column_vars:list) -> None:
+        self.column_vars = ast.literal_eval(column_vars)
 
-        while True:
-            for i, column in enumerate(self.column_vars):
-                print(f'{i}): {column}')
-            change_column = int(input('Do you wish to change any? [0, 1, 2, 3, 4, -1 (exit)]: '))
+        missing_columns = [column for column in self.column_vars if column not in self._original_df.columns]
 
-            if change_column == -1:
-                break
-            elif change_column in [0,1,2,3,4]:
-                new_column_name = input(f'Digit the new {self.column_vars[change_column]} column name: ')
-                if new_column_name in self._original_df.columns:
-                    self.column_vars[change_column] = new_column_name
-                    print(f'{self.column_vars[change_column]} changed to {new_column_name}')
-                else:
-                    print('Invalid column name')
-                continue
-            else:
-                print('Invalid option')
-                continue
-
-        print('Columns choosed.')
+        if not missing_columns:
+            print('Columns choosed.')
+        else:
+            print(f"The following columns were not found: {', '.join(missing_columns)}")
+            exit()
 
      
     def check_species_and_lineage(self) -> None:
 
-            def compare_data(line, column_error, wrong_data, corrected_data, id_number) -> bool:
-                if corrected_data != wrong_data:
-                    self._incorrect_data['Error Line'].append(line)
-                    self._incorrect_data['Error Type'].append(column_error)
-                    self._incorrect_data['Wrong Name'].append(wrong_data)
-                    self._incorrect_data['Suggested Name'].append(corrected_data)
-                    self._incorrect_data['OTT ID Source'].append(f'=HYPERLINK("https://tree.opentreeoflife.org/taxonomy/browse?id={id_number}", "{id_number}")')
-                    self._incorrect_data['Change'].append('y/n')
+        def compare_data(line, column_error, wrong_data, corrected_data, id_number) -> bool:
+            if corrected_data != wrong_data:
+                self._incorrect_data['Error Line'].append(line)
+                self._incorrect_data['Error Type'].append(column_error)
+                self._incorrect_data['Wrong Name'].append(wrong_data)
+                self._incorrect_data['Suggested Name'].append(corrected_data)
+                self._incorrect_data['OTT ID Source'].append(f'=HYPERLINK("https://tree.opentreeoflife.org/taxonomy/browse?id={id_number}", "{id_number}")')
+                self._incorrect_data['Change'].append('y/n')
 
-            species_list = self._original_df[self.column_vars[0]]
+        species_list = self._original_df[self.column_vars[0]]
 
-            for counter in tqdm(range(len(species_list))):
-                if species_list[counter] == '':
-                    continue
+        for counter in tqdm(range(len(species_list))):
+            if species_list[counter] == '':
+                continue
 
-                json_post = {'names': [species_list[counter]],
-                            'do_approximate_matching': True,
-                            'context_name': 'All life'}
+            json_name = {'names': [species_list[counter]],
+                        'do_approximate_matching': True,
+                        'context_name': 'All life'}
+            r_name = requests.post('https://api.opentreeoflife.org/v3/tnrs/match_names', json=json_name)
+            ott_id = r_name.json()['results'][0]['matches'][0]['taxon']['ott_id']
+            json_id = {'ott_id': ott_id, 'include_lineage': True}
+            r_id = requests.post('https://api.opentreeoflife.org/v3/taxonomy/taxon_info', json=json_id)
+            lineage = r_id.json()['lineage']
+            c = 1 if len(lineage) == 33 else 0
 
-                r_name = requests.post('https://api.opentreeoflife.org/v3/tnrs/match_names', json=json_post)
-                
-                ott_id = r_name.json()['results'][0]['matches'][0]['taxon']['ott_id']
-                
-                _json_post = {'ott_id': ott_id, 'include_lineage': True}
+            compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], r_name.json()['results'][0]['matches'][0]['matched_name'], r_name.json()['results'][0]['matches'][0]['taxon']['ott_id'])  # species
+            compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage[20 + c]['unique_name'], lineage[20 + c]['ott_id'])  # phylum
+            compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage[16 + c]['unique_name'], lineage[16 + c]['ott_id'])  # class
+            compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage[10 + c]['unique_name'], lineage[10 + c]['ott_id'])  # order
+            compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage[3 + c]['unique_name'], lineage[3 + c]['ott_id'])  # family
 
-                r_id = requests.post('https://api.opentreeoflife.org/v3/taxonomy/taxon_info', json=_json_post)
 
-                lineage = r_id.json()['lineage']
-                c = 1 if len(lineage) == 33 else 0
+    def create_to_correct_spreadsheet(self, spreadsheet_name):
+        if self._incorrect_data:
+            self._to_correct_df = pd.DataFrame(self._incorrect_data).style.map(
+                lambda x: 'color: blue; text-decoration: underline;',
+                subset=['OTT ID Source'],
+            )
 
-                compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], r_name.json()['results'][0]['matches'][0]['matched_name'], r_name.json()['results'][0]['matches'][0]['taxon']['ott_id'])  # species
-                compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage[20 + c]['unique_name'], lineage[20 + c]['ott_id'])  # phylum
-                compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage[16 + c]['unique_name'], lineage[16 + c]['ott_id'])  # class
-                compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage[10 + c]['unique_name'], lineage[10 + c]['ott_id'])  # order
-                compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage[3 + c]['unique_name'], lineage[3 + c]['ott_id'])  # family
-
-            if self._incorrect_data:
-                self._to_correct_df = pd.DataFrame(self._incorrect_data).style.map(
-                    lambda x: 'color: blue; text-decoration: underline;',
-                    subset=['OTT ID Source'],
-                )
-
-                new_corrected_spreadhseet_name = f'TO_CORRECT_{self._original_spreadsheet_name}'
-                while True:
-                    print(f'New corrected spreadsheet name: {new_corrected_spreadhseet_name}')
-                    change_name = input('Wish to change? [y/n]: ')
-
-                    if change_name.lower() == 'y':
-                        new_corrected_spreadhseet_name = input('Digit the new corrected spreadsheet name: ')
-                    else:
-                        break
-
-                self._to_correct_df.to_excel(f'{new_corrected_spreadhseet_name}.xlsx')
-            else:
-                print('No errors in spreadsheet')
+            self._to_correct_df.to_excel(f'{spreadsheet_name}.xlsx')
+        else:
+            print('No errors in spreadsheet')
