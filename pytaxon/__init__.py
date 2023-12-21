@@ -1,2 +1,1 @@
-from .pytaxonOpenTree import *
-from .pytaxonGBIF import *
+from .pytaxon import *

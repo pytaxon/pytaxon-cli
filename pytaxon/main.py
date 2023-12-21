@@ -1,36 +1,44 @@
-from pytaxon import Pytaxon_OTT
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-# TODO: choose over services (gbif and opentree)
+import argparse
+
+from pytaxon import Pytaxon, Pytaxon_GBIF, Pytaxon_OTT
+
+
+def main(): 
+    parser = argparse.ArgumentParser(description='Pytaxon baby')
+    parser.add_argument('-i', '--input', help='Input of original spreadsheet')
+    parser.add_argument('-r', '--columns', help="Input of column names: ['Species', 'Family', 'Order', 'Class', 'Phylum', 'Kingdom']")
+    parser.add_argument('-c', '--to_check', type=str, help='Name of spreadsheet to check')
+    parser.add_argument('-gbif', action='store_true', help='Use the GBIF service API')
+    parser.add_argument('-ott', action='store_true', help='Use the Open Tree of Life service API')
+
+    parser.add_argument('-os', '--original_spreadsheet', help='Use the Open Tree of Life service API')
+    parser.add_argument('-cs', '--checked_spreadsheet', help='Use the Open Tree of Life service API')
+    parser.add_argument('-o', '--output', help='Name of checked spreadsheet')
+    args = parser.parse_args()
+
+    if args.gbif:
+        pt = Pytaxon_GBIF()
+        pt.read_spreadshet(args.input)
+        pt.read_columns(args.columns)
+        pt.check_species_and_lineage()
+        pt.create_to_correct_spreadsheet(args.to_check)
+
+    elif args.ott:
+        pt = Pytaxon_OTT()
+        pt.read_spreadshet(args.input)
+        pt.read_columns(args.columns)
+        pt.check_species_and_lineage()
+        pt.create_to_correct_spreadsheet(args.to_check)
+
+    elif args.original_spreadsheet and args.corrected_spreadsheet:
+        pt = Pytaxon()
+        pt.update_original_spreadsheet(args.original_spreadsheet, args.corrected_spreadsheet, args.output)
+    else:
+        print('Error')
+
+
 if __name__ == '__main__':
-    pt = Pytaxon_OTT()
-    print(pt.logo)
-    # pt.read_spreadshet(input('Digite o caminho do seu arquivo: '))
-    # pt.read_spreadshet("F:/0 - Bibliotecas Windows/Área de trabalho/pytaxon/pytaxon-cli/db/Opiliones spreadsheet.xlsx")
-    pt.read_spreadshet("F:/0 - Bibliotecas Windows/Área de trabalho/pytaxon/pytaxon-cli/db/Lepidoptera_-_Importacao_IX_lote_1.xls")
-    pt.read_taxon_columns()
-    pt.connect_to_api_taxony()
-    pt.data_incorrect_taxons()
-    pt.create_taxonomies_pivot_spreadsheet()
-
-    # while True:
-    #     match input(pt.menu):
-    #         case '1':
-    #             # if not pt.connect_to_api:
-    #             #     print('Could not connect to OpenTree API')
-    #             #     exit()
-
-                
-
-    #         case '2':
-    #             pt.update_original_spreadsheet()
-
-    #         case '3':
-    #             # pt.read_lineage_columns(*input('Digite o nome das colunas da Tribo, Família, Ordem, Classe e Filo: ').split())
-    #             pt.read_lineage_columns(*['Tribe1', 'Family', 'Order', 'Class', 'Phylum'])
-    #             pt.connect_to_api_lineage()
-
-    #         case '4':
-    #             pass
-
-    #         case _:
-    #             break
+    main()
