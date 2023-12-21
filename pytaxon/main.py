@@ -33,9 +33,9 @@ def main():
         pt.check_species_and_lineage()
         pt.create_to_correct_spreadsheet(args.to_check)
 
-    elif args.original_spreadsheet and args.corrected_spreadsheet:
+    elif args.original_spreadsheet and args.checked_spreadsheet:
         pt = Pytaxon()
-        pt.update_original_spreadsheet(args.original_spreadsheet, args.corrected_spreadsheet, args.output)
+        pt.update_original_spreadsheet(args.original_spreadsheet, args.checked_spreadsheet, args.output)
     else:
         print('Error')
 
