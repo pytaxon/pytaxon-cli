@@ -70,7 +70,7 @@ class Pytaxon:
             append_ID_number()
             self._incorrect_data['Change'].append('y/n')
 
-    def no_correspondence_data(self, append_ID_number, line, column_error, wrong_data, id_number):
+    def no_correspondence_data(self, append_ID_number, line, column_error, wrong_data):
         self._incorrect_data['Error Line'].append(line)
         self._incorrect_data['Error Type'].append(column_error)
         self._incorrect_data['Wrong Name'].append(wrong_data)
@@ -79,7 +79,7 @@ class Pytaxon:
         self._incorrect_data['Change'].append('No Correspondence')
 
     def verify_taxon(self, nome_taxon, id):
-        valid_ranks = ['kingdom', 'phylum', 'class', 'order', 'family', 'species']
+        valid_ranks = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
         url = "http://resolver.globalnames.org/name_resolvers.json"
         params = {
             'names': nome_taxon,
@@ -104,31 +104,47 @@ class Pytaxon:
                 else:
                     for rank, path in zip(ranks, paths):
                         if rank in valid_ranks:
-                            result[rank] = [path]
+                            result[rank] = [path, 'No ID']
 
                 return result
             else:
                 return "Resposta da API não contém os dados esperados"
         else:
             return f"Erro ao acessar a API: Status {response.status_code}"
+        
+    def choose_taxon(self, loc_list):
+        for i, taxon in enumerate(loc_list):
+            if taxon != "":
+                return i, taxon
 
     def check_species_and_lineage(self, source_id):
         species_list = self._original_df[self.column_vars[0]]
         for counter in tqdm(range(len(species_list))):
-            if species_list[counter] == '':
+            loc_list = [self._original_df[self.column_vars[i]][counter] for i in range(len(self.column_vars))]  # MELHORAR
+            choosen_taxon = self.choose_taxon(loc_list)
+
+            lineage = self.verify_taxon(choosen_taxon[1], source_id)
+            if not lineage:
+                self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
                 continue
 
-            lineage = self.verify_taxon(species_list[counter], source_id)
-
-            try:
-                self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], lineage['species'][0], lineage['species'][1])  # species
-            except:
-                self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
-            self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['family'][0], lineage['family'][1])  # family
-            self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage['order'][0], lineage['order'][1])  # order
-            self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage['class'][0], lineage['class'][1])  # class
-            self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage['phylum'][0], lineage['phylum'][1])  # phylum
-            self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
+            if choosen_taxon[0] == 0:
+                try:
+                    self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], lineage['species'][0], lineage['species'][1]) # species
+                except:
+                    self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
+            if choosen_taxon[0] <= 1:
+                self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['genus'][0], lineage['genus'][1])  # genus
+            if choosen_taxon[0] <= 2:
+                self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage['family'][0], lineage['family'][1])  # family
+            if choosen_taxon[0] <= 3:
+                self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage['order'][0], lineage['order'][1])  # order
+            if choosen_taxon[0] <= 4:
+                self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage['class'][0], lineage['class'][1])  # class
+            if choosen_taxon[0] <= 5:
+                self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['phylum'][0], lineage['phylum'][1])  # phylum
+            if choosen_taxon[0] <= 6:
+                self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
 
     def create_to_correct_spreadsheet(self, spreadsheet_name):
         if self._incorrect_data:
@@ -157,51 +173,6 @@ class Pytaxon:
             print('Error to update original spreadsheet: ', e)
 
 
-# OUT OF SERVICE FOR MALFUNCTION
-class Pytaxon_OTT(Pytaxon):
-    def compare_data(self, line, column_error, wrong_data, corrected_data, id_number) -> bool:
-        def append_ID_number():
-            self._incorrect_data['OTT ID Source'].append(f'=HYPERLINK("https://tree.opentreeoflife.org/taxonomy/browse?id={id_number}", "{id_number}")')
-        super().compare_data(append_ID_number, line, column_error, wrong_data, corrected_data, id_number)
-
-    def no_correspondence_data(self, line, column_error, wrong_data):
-        def append_ID_number():
-            self._incorrect_data['OTT ID Source'].append('No Correspondence')
-        super().no_correspondence_data(append_ID_number, line, column_error, wrong_data)
-
-    def check_species_and_lineage(self) -> None:
-        species_list = self._original_df[self.column_vars[0]]
-
-        for counter in tqdm(range(len(species_list))):
-            if species_list[counter] == '':  # ADD TO GENUS TO FAMILY ETC
-                continue
-
-            json_name = {'names': [species_list[counter]],
-                        'do_approximate_matching': True,
-                        'context_name': 'All life'}
-            r_name = requests.post('https://api.opentreeoflife.org/v3/tnrs/match_names', json=json_name)
-            try:
-                ott_id = r_name.json()['results'][0]['matches'][0]['taxon']['ott_id']
-            except Exception as e:
-                self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
-                continue
-
-            json_id = {'ott_id': ott_id, 'include_lineage': True}
-            r_id = requests.post('https://api.opentreeoflife.org/v3/taxonomy/taxon_info', json=json_id)
-            lineage = r_id.json()['lineage']
-            c = 1 if len(lineage) == 33 else 0
-
-            self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], r_name.json()['results'][0]['matches'][0]['matched_name'], r_name.json()['results'][0]['matches'][0]['taxon']['ott_id'])  # species
-            self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage[3 + c]['unique_name'], lineage[3 + c]['ott_id'])  # family
-            self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage[10 + c]['unique_name'], lineage[10 + c]['ott_id'])  # order
-            self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage[16 + c]['unique_name'], lineage[16 + c]['ott_id'])  # class
-            self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage[20 + c]['unique_name'], lineage[20 + c]['ott_id'])  # phylum
-
-    def create_to_correct_spreadsheet(self, spreadsheet_name):
-        self.source_id = ['OTT ID Source']
-        super().create_to_correct_spreadsheet(spreadsheet_name)
-
-
 class Pytaxon_GBIF(Pytaxon):
     def compare_data(self, line, column_error, wrong_data, corrected_data, id_number) -> bool:
         def append_ID_number():
@@ -211,24 +182,6 @@ class Pytaxon_GBIF(Pytaxon):
     def create_to_correct_spreadsheet(self, spreadsheet_name):
         self.source_id = ['GBIF ID Source']
         super().create_to_correct_spreadsheet(spreadsheet_name)
-
-    def check_species_and_lineage(self, source_id):
-        species_list = self._original_df[self.column_vars[0]]
-        for counter in tqdm(range(len(species_list))):
-            if species_list[counter] == '':
-                continue
-
-            lineage = self.verify_taxon(species_list[counter], source_id)
-
-            try:
-                self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], lineage['species'][0], lineage['species'][1])  # species
-            except:
-                self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
-            self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['family'][0], lineage['family'][1])  # family
-            self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage['order'][0], lineage['order'][1])  # order
-            self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage['class'][0], lineage['class'][1])  # class
-            self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage['phylum'][0], lineage['phylum'][1])  # phylum
-            self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
 
     def no_correspondence_data(self, line, column_error, wrong_data):
         def append_ID_number():
@@ -246,27 +199,9 @@ class Pytaxon_NCBI(Pytaxon):
         self.source_id = ['NCBI ID Source']
         super().create_to_correct_spreadsheet(spreadsheet_name)
 
-    def check_species_and_lineage(self, source_id):
-        species_list = self._original_df[self.column_vars[0]]
-        for counter in tqdm(range(len(species_list))):
-            if species_list[counter] == '':
-                continue
-
-            lineage = self.verify_taxon(species_list[counter], source_id)
-
-            try:
-                self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], lineage['species'][0], lineage['species'][1])  # species
-            except:
-                self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
-            self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['family'][0], lineage['family'][1])  # family
-            self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage['order'][0], lineage['order'][1])  # order
-            self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage['class'][0], lineage['class'][1])  # class
-            self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage['phylum'][0], lineage['phylum'][1])  # phylum
-            self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
-
     def no_correspondence_data(self, line, column_error, wrong_data):
         def append_ID_number():
-            self._incorrect_data['GBIF ID Source'].append('No Correspondence')
+            self._incorrect_data['NCBI ID Source'].append('No Correspondence')
         super().no_correspondence_data(append_ID_number, line, column_error, wrong_data)
 
 
@@ -280,62 +215,23 @@ class Pytaxon_INAT(Pytaxon):
         self.source_id = ['INAT ID Source']
         super().create_to_correct_spreadsheet(spreadsheet_name)
 
-    def check_species_and_lineage(self, source_id):
-        species_list = self._original_df[self.column_vars[0]]
-        for counter in tqdm(range(len(species_list))):
-            if species_list[counter] == '':
-                continue
-
-            lineage = self.verify_taxon(species_list[counter], source_id)
-
-            try:
-                self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], lineage['species'][0], lineage['species'][1])  # species
-            except:
-                self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
-            self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['family'][0], lineage['family'][1])  # family
-            self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage['order'][0], lineage['order'][1])  # order
-            self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage['class'][0], lineage['class'][1])  # class
-            self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage['phylum'][0], lineage['phylum'][1])  # phylum
-            self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
-
     def no_correspondence_data(self, line, column_error, wrong_data):
         def append_ID_number():
-            self._incorrect_data['GBIF ID Source'].append('No Correspondence')
+            self._incorrect_data['INAT ID Source'].append('No Correspondence')
         super().no_correspondence_data(append_ID_number, line, column_error, wrong_data)
 
 
 class Pytaxon_COL(Pytaxon):
     def compare_data(self, line, column_error, wrong_data, corrected_data, id_number) -> bool:
         def append_ID_number():
-            self._incorrect_data['OTT ID Source'].append(f'=HYPERLINK("https://www.checklistbank.org/dataset/278910/taxon/{id_number}", "{id_number}")')
+            self._incorrect_data['COL ID Source'].append(f'=HYPERLINK("https://www.checklistbank.org/dataset/278910/taxon/{id_number}", "{id_number}")')
         super().compare_data(append_ID_number, line, column_error, wrong_data, corrected_data, id_number)
 
     def create_to_correct_spreadsheet(self, spreadsheet_name):
         self.source_id = ['COL ID Source']
         super().create_to_correct_spreadsheet(spreadsheet_name)
 
-    def check_species_and_lineage(self, source_id):
-        species_list = self._original_df[self.column_vars[0]]
-        for counter in tqdm(range(len(species_list))):
-            if species_list[counter] == '':
-                continue
-
-            lineage = self.verify_taxon(species_list[counter], source_id)
-
-            try:
-                self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], lineage['species'][0], lineage['species'][1])  # species
-            except:
-                self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
-            self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['family'][0], lineage['family'][1])  # family
-            self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage['order'][0], lineage['order'][1])  # order
-            self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage['class'][0], lineage['class'][1])  # class
-            self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage['phylum'][0], lineage['phylum'][1])  # phylum
-            self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
-
     def no_correspondence_data(self, line, column_error, wrong_data):
         def append_ID_number():
-            self._incorrect_data['GBIF ID Source'].append('No Correspondence')
+            self._incorrect_data['COL ID Source'].append('No Correspondence')
         super().no_correspondence_data(append_ID_number, line, column_error, wrong_data)
-
-
-# lineage['species'][0]
