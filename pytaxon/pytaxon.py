@@ -101,6 +101,12 @@ class Pytaxon:
                     for rank, path, _id in zip(ranks, paths, ids):
                         if rank in valid_ranks:
                             result[rank] = [path, _id]
+
+                    if result:
+                        for rank in valid_ranks:
+                            if rank not in result:
+                                result[rank] = ['No Data', 'No ID']
+
                 else:
                     for rank, path in zip(ranks, paths):
                         if rank in valid_ranks:
@@ -120,12 +126,20 @@ class Pytaxon:
     def check_species_and_lineage(self, source_id):
         species_list = self._original_df[self.column_vars[0]]
         for counter in tqdm(range(len(species_list))):
-            loc_list = [self._original_df[self.column_vars[i]][counter] for i in range(len(self.column_vars))]  # MELHORAR
+            loc_list = [self._original_df[self.column_vars[i]][counter] for i in range(len(self.column_vars))] 
             choosen_taxon = self.choose_taxon(loc_list)
-
-            lineage = self.verify_taxon(choosen_taxon[1], source_id)
-            if not lineage:
+            if not choosen_taxon:
                 self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
+                continue
+
+            try:
+                lineage = self.verify_taxon(choosen_taxon[1], source_id)
+            except:
+                self.no_correspondence_data(counter+2, 'Data Incomplete', choosen_taxon[1])
+                continue
+            
+            if not lineage:
+                self.no_correspondence_data(counter+2, 'Taxon Not Found', choosen_taxon[1])
                 continue
 
             if choosen_taxon[0] == 0:
@@ -134,17 +148,35 @@ class Pytaxon:
                 except:
                     self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
             if choosen_taxon[0] <= 1:
-                self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['genus'][0], lineage['genus'][1])  # genus
+                try:
+                    self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['genus'][0], lineage['genus'][1])  # genus
+                except:
+                    self.no_correspondence_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter])
             if choosen_taxon[0] <= 2:
-                self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage['family'][0], lineage['family'][1])  # family
+                try:
+                    self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage['family'][0], lineage['family'][1])  # family
+                except:
+                    self.no_correspondence_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter])
             if choosen_taxon[0] <= 3:
-                self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage['order'][0], lineage['order'][1])  # order
+                try:
+                    self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage['order'][0], lineage['order'][1])  # order
+                except:
+                    self.no_correspondence_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter])
             if choosen_taxon[0] <= 4:
-                self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage['class'][0], lineage['class'][1])  # class
+                try:
+                    self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage['class'][0], lineage['class'][1])  # class
+                except:
+                    self.no_correspondence_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter])
             if choosen_taxon[0] <= 5:
-                self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['phylum'][0], lineage['phylum'][1])  # phylum
+                try:
+                    self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['phylum'][0], lineage['phylum'][1])  # phylum
+                except:
+                    self.no_correspondence_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter])
             if choosen_taxon[0] <= 6:
-                self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
+                try:
+                    self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
+                except:
+                    self.no_correspondence_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter])
 
     def create_to_correct_spreadsheet(self, spreadsheet_name):
         if self._incorrect_data:
