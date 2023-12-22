@@ -30,7 +30,7 @@ class Pytaxon:
                          Taxonomy and Lineage Checker\n'''
 
     def connect_to_api(self) -> None:        
-        if requests.get("http://resolver.globalnames.org/name_resolvers.json").status_code != 200:  # TO FIX
+        if requests.get("http://resolver.globalnames.org/name_resolvers.json").status_code != 200:
             print(f"Could not connect to GNR api")
             exit()
         else:
@@ -43,7 +43,7 @@ class Pytaxon:
         original_spreadsheet_name, _ = os.path.splitext(original_spreadsheet)
 
         self._original_df = pd.read_excel(original_spreadsheet_path).\
-            reset_index().fillna('')[:30]  # TO CHANGE
+            reset_index().fillna('')
 
         print(f'Spreadsheet {original_spreadsheet_name} read.')
         time.sleep(1)
