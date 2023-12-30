@@ -1,6 +1,5 @@
 import os
 import time
-import ast
 from collections import defaultdict
 
 import pandas as pd
