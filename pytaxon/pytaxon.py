@@ -98,7 +98,7 @@ class Pytaxon:
                 result = {}
                 for i, rank in enumerate(ranks):
                     if rank in valid_ranks:
-                        result[rank] = [paths[i], ids[i]]
+                        result[rank] = [paths[i], ids[i] if ids != [''] else 'No ID']
                     
                 for rank in valid_ranks:
                     if rank not in result:
@@ -109,7 +109,7 @@ class Pytaxon:
     def check_species_and_lineage(self, source_id):
         species_list = self._original_df[self.column_vars[0]]
         for counter in tqdm(range(len(species_list))):
-            choosen_taxon = self._original_df['scientificName'][counter]
+            choosen_taxon = self._original_df[self.column_vars[-1]][counter]
             if not choosen_taxon:
                 self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
                 continue
