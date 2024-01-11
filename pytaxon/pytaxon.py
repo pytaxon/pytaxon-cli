@@ -99,6 +99,7 @@ class Pytaxon:
                 for i, rank in enumerate(ranks):
                     if rank in valid_ranks:
                         result[rank] = [paths[i], ids[i] if ids != [''] else 'No ID']
+                result['scientificName'] = [service['name_string'], service['taxon_id'] if service['taxon_id'] != [''] else 'No ID']
                     
                 for rank in valid_ranks:
                     if rank not in result:
@@ -158,6 +159,11 @@ class Pytaxon:
                 self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
             except:
                 self.no_correspondence_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter])
+
+            try:
+                self.compare_data(counter+2, self.column_vars[7], self._original_df[self.column_vars[7]][counter], lineage['scientificName'][0], lineage['scientificName'][1])  # scientificName
+            except:
+                self.no_correspondence_data(counter+2, self.column_vars[7], self._original_df[self.column_vars[7]][counter])
 
     def create_to_correct_spreadsheet(self, spreadsheet_name):
         if self._incorrect_data:
