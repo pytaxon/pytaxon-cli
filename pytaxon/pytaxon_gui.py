@@ -3,13 +3,16 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import subprocess
 
+
 class PytaxonGUI:
+    """Initialize the Pytaxon GUI application."""
     def __init__(self, master):
         self.master = master
         master.title("Pytaxon GUI")
         self.setup_gui()
 
     def setup_gui(self):
+        """Set up the GUI layout."""
         # Campo de entrada para o arquivo de origem
         tk.Label(self.master, text="Input File:").grid(row=0, column=0)
         self.input_file = tk.Entry(self.master, width=50)
@@ -35,6 +38,7 @@ class PytaxonGUI:
         tk.Button(self.master, text="Run Pytaxon", command=self.run_pytaxon).grid(row=4, column=1)
 
     def open_file(self):
+        """Open a file dialog to select an input file."""
         filetypes = [("Excel files", "*.xlsx"), ("Old Excel files", "*.xls"), ("All files", "*.*")]
         filepath = filedialog.askopenfilename(filetypes=filetypes)
         if filepath:
@@ -42,6 +46,7 @@ class PytaxonGUI:
             self.input_file.insert(0, filepath)
 
     def run_pytaxon(self):
+        """Run the Pytaxon process using subprocess."""
         input_path = self.input_file.get()
         columns = self.column_names.get()
         source_id = self.source_id.get()
@@ -59,6 +64,7 @@ class PytaxonGUI:
             messagebox.showerror("Error", f"An unexpected error occurred: {e}")
 
 def main():
+    
     root = tk.Tk()
     app = PytaxonGUI(root)
     root.mainloop()
