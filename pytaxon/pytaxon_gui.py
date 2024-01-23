@@ -1,3 +1,5 @@
+import os
+
 import customtkinter as ctk
 from tkinter import Tk, filedialog, ttk, Toplevel, Entry, Button
 from PIL import Image, ImageTk
@@ -53,6 +55,19 @@ def run_pytaxon(input_path, source_id, check_spreadsheet_name):
     command = ["python", "main.py", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
     try:
         subprocess.run(command, check=True)
+
+        log_file_path = "spreadsheet_log.txt"
+
+        # Verificar se o arquivo de log existe e contém a mensagem específica
+        if os.path.exists(log_file_path):
+            with open(log_file_path, 'r') as file:
+                content = file.read().strip()
+                if content == 'No errors in spreadsheet':
+                    CTkMessagebox(message="No errors in spreadsheet.", icon="check", option_1="Ok")
+                    os.remove(log_file_path)  # Apagar o arquivo de log
+                    clear_treeviews()
+                    return
+
         CTkMessagebox(message="Pytaxon has been run successfully.", icon="check", option_1="Ok")
         load_spreadsheet(input_path, check_spreadsheet_name)
     except subprocess.CalledProcessError as e:
