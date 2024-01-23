@@ -90,58 +90,59 @@ def load_spreadsheet_additional(file_path, treeview):
         treeview.insert('', 'end', values=values)
 
     # Este evento é vinculado para permitir a edição de células com um duplo clique.
-    treeview.bind('<Double-1>', lambda event: on_double_click(event, treeview, sheet_spreadsheet, file_path))
+    # Note que on_double_click é definido para receber três argumentos: evento, treeview e filepath.
+    treeview.bind('<Double-1>', lambda event: on_double_click(event, treeview, file_path))
 
 
-def on_double_click(event, treeview, sheet, filepath):
-    item = treeview.selection()[0]  # Obtém o item selecionado
-    col = int(treeview.identify_column(event.x)[1:])  # Determina a coluna clicada
-    row = treeview.index(item) + 2  # Determina a linha clicada
 
-    value = treeview.item(item, 'values')[col - 1]  # Obtém o valor atual da célula
+def on_double_click(event, treeview, filepath):
+    col_id = treeview.identify_column(event.x)
+    col_name = treeview.heading(col_id, 'text')
 
-    # Cria uma janela popup para edição
+    if col_name != 'Change':
+        print("Apenas a coluna 'Change' pode ser editada.")
+        return
+
+    item = treeview.selection()[0]
+    row_index = treeview.index(item) + 2  # As linhas no Excel começam em 1, mas precisamos considerar o cabeçalho
+    current_value = treeview.item(item, 'values')[treeview['columns'].index(col_name)]
+
     popup = Toplevel()
-    popup.geometry("200x100+690+400")  # Define a geometria da janela popup
+    popup.geometry("200x100+690+400")
     entry = Entry(popup)
-    entry.insert(0, value)  # Insere o valor atual na entrada
+    entry.insert(0, current_value)
     entry.pack()
-    entry.focus_set()  # Coloca o foco na entrada de texto
+    entry.focus_set()
 
-    # Função para salvar o novo valor e atualizar a célula
-    def save_new_value(entry, item, treeview, sheet, filepath, col):
+    def save_new_value(entry, row_index, col_name, item, treeview, filepath):
         new_value = entry.get()
 
-        # Nome da coluna que deve ser modificada
-        column_name_to_edit = "Change"
-        # Obtém os nomes das colunas do treeview
-        columns = [treeview.heading("#{}".format(i))["text"] for i in range(1, len(treeview["columns"]) + 1)]
+        workbook = load_workbook(filename=filepath)
+        worksheet = workbook.active  # Assume que a planilha ativa é a correta
 
-        # Verifica se a coluna clicada é a coluna 'Change'
-        if columns[col - 1] == column_name_to_edit:
-            # Atualiza o valor na célula correspondente do treeview
-            values = list(treeview.item(item, 'values'))
-            values[col - 1] = new_value
-            treeview.item(item, values=values)
-
-            # Atualiza o valor na planilha do Excel
-            workbook = load_workbook(filename=filepath)
-            worksheet = workbook.active
-
-            # A linha no treeview corresponde à linha na planilha?
-            # Se sim, ajuste o valor da célula correspondente
-            worksheet.cell(row=row, column=col, value=new_value)
-            workbook.save(filepath)
-            workbook.close()
-
-            popup.destroy()
+        col_letter = None
+        for cell in worksheet[1]:  # Procura pelo cabeçalho correto para encontrar a letra da coluna
+            if cell.value == col_name:
+                col_letter = cell.column_letter
+                cell_ref = f"{col_letter}{row_index}"
+                worksheet[cell_ref].value = new_value
+                print(f"Valor '{new_value}' salvo na célula '{cell_ref}'")
+                break
         else:
-            print("Apenas a coluna 'Change' pode ser atualizada.")
-            popup.destroy()
+            print(f"Não foi possível encontrar a coluna '{col_name}' na planilha.")
+            return
 
-    # Cria e adiciona um botão de salvar na janela popup
-    button = Button(popup, text="Save", command=lambda: save_new_value(entry, item, treeview, sheet, filepath, col))
+        workbook.save(filepath)
+        workbook.close()
+        treeview.set(item, column=col_name, value=new_value)
+        print("Treeview atualizado.")
+        popup.destroy()
+
+    button = Button(popup, text="Save", command=lambda: save_new_value(
+        entry, row_index, col_name, item, treeview, filepath))
     button.pack()
+
+
 
 
 def update_cell(sheet, row, col, new_value, item, treeview):
@@ -198,7 +199,8 @@ def create_layout():
 
     label_columns = ctk.CTkLabel(master=frame1, text="Column Names", fg_color=frame_color, text_color='white')
     label_columns.place(relx=0.05, rely=0.3)
-    entry_columns = ctk.CTkEntry(master=frame1, placeholder_text="Species, Genus, Family, Order, Class, Phylum, Kingdom, ScientificName",
+    entry_columns = ctk.CTkEntry(master=frame1,
+                                 placeholder_text="Species, Genus, Family, Order, Class, Phylum, Kingdom, ScientificName",
                                  fg_color="white")
     entry_columns.place(relx=0.05, rely=0.4, relwidth=0.9)
 
@@ -232,18 +234,14 @@ def create_layout():
 
     tree = ttk.Treeview(frame3)
     tree.place(relx=0.055, rely=0.1, relwidth=0.9, relheight=0.7)
-    # O bind aqui precisa ser ajustado para usar variáveis que são definidas após a criação do layout.
-    # Isso será feito em um comando separado que atualiza o bind após os arquivos serem carregados.
-    # tree.bind('<Double-1>', lambda event: on_double_click(event, tree, sheet, filepath))
 
     frame4 = ctk.CTkFrame(master=root, corner_radius=10, fg_color=frame_color)
     frame4.place(relx=0.62, rely=0.44, relwidth=0.36, relheight=0.51)
     label_check_spreadsheet = Label(master=root, text="Check Spreadsheet", bg=frame_color, fg='white')
     label_check_spreadsheet.place(relx=0.64, rely=0.45)
+
     tree2 = ttk.Treeview(frame4)
     tree2.place(relx=0.055, rely=0.1, relwidth=0.9, relheight=0.7)
-    # Assim como para o primeiro tree, o bind para o segundo tree também precisará ser ajustado posteriormente.
-    # tree2.bind('<Double-1>', lambda event: on_double_click(event, tree2, sheet, filepath))
 
     corrected_spreadsheet_label = ctk.CTkLabel(master=frame4, text="Corrected spreadsheet name", fg_color=frame_color,
                                                text_color='white')
