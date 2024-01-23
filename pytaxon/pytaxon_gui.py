@@ -27,10 +27,25 @@ def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadshe
     try:
         subprocess.run(command, check=True)
         CTkMessagebox(message="Pytaxon correction has been run successfully.", icon="check", option_1="Ok")
+        clear_treeviews()  # Limpa as visualizações após a execução bem-sucedida
+
+        # Limpa o campo corrected_spreadsheet_entry após a execução bem-sucedida
+        corrected_spreadsheet_entry.delete(0, ctk.END)
+
     except subprocess.CalledProcessError as e:
         CTkMessagebox(title="Error", message=f"An error occurred while running Pytaxon correction: {e}", icon="cancel")
     except Exception as e:
         CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
+
+# Adicione esta nova função para limpar os Treeviews
+def clear_treeviews():
+    global tree, tree2
+    for item in tree.get_children():
+        tree.delete(item)
+    for item in tree2.get_children():
+        tree2.delete(item)
+    tree['columns'] = []
+    tree2['columns'] = []
 
 
 def run_pytaxon(input_path, source_id, check_spreadsheet_name):
@@ -258,7 +273,6 @@ def create_layout():
     root.mainloop()
 
 create_layout()
-
 
 
 
