@@ -9,7 +9,7 @@ from pytaxon import Pytaxon, Pytaxon_COL, Pytaxon_NCBI, Pytaxon_INAT, Pytaxon_GB
 def main(): 
     parser = argparse.ArgumentParser(description='Pytaxon baby')
     parser.add_argument('-i', '--input', help='Input of original spreadsheet')
-    parser.add_argument('-r', '--columns', help="Input of column names: 'ScientificName, Species, Genus, Family, Order, Class, Phylum, Kingdom'")
+    parser.add_argument('-r', '--columns', help="Input of column names: 'Kingdom, Phylum, Class, Order, Family, Genus, Species, ScientificName'")
     parser.add_argument('-c', '--to_check', type=str, help='Name of spreadsheet to check')
     parser.add_argument('-si', '--source_id', type=int, help='Number of the source ID')
 
