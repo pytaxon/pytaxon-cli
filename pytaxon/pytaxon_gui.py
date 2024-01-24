@@ -24,7 +24,7 @@ def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadshe
     output_path = corrected_spreadsheet_entry.get()
 
     # Configura os argumentos do comando de forma similar à função run_pytaxon
-    command = ["pytaxon", "-os", input_path, "-cs", check_spreadsheet_name, "-o", output_path]
+    command = ["python", "main.py", "-os", input_path, "-cs", check_spreadsheet_name, "-o", output_path]
 
     try:
         subprocess.run(command, check=True)
@@ -39,7 +39,6 @@ def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadshe
     except Exception as e:
         CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
 
-
 # Adicione esta nova função para limpar os Treeviews
 def clear_treeviews():
     global tree, tree2
@@ -52,8 +51,8 @@ def clear_treeviews():
 
 
 def run_pytaxon(input_path, source_id, check_spreadsheet_name):
-    columns = "species,genus,family,order,class,phylum,kingdom,scientificName"
-    command = ["pytaxon", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
+    columns = entry_columns.get()
+    command = ["python", "main.py", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
     try:
         subprocess.run(command, check=True)
 
@@ -76,7 +75,6 @@ def run_pytaxon(input_path, source_id, check_spreadsheet_name):
     except Exception as e:
         CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
 
-
 def show_id_info():
     CTkMessagebox(message="IDs Data Sources:\n"
                           "1 - Catalogue of Life Checklist\n"
@@ -84,13 +82,13 @@ def show_id_info():
                           "11 - GBIF\n"
                           "180 - iNaturalist Taxonomy", option_1="Ok")
 
-
 def load_spreadsheet(file_path, spreadsheet_name=""):
     try:
         workbook = load_workbook(filename=file_path, data_only=True)
         sheet = workbook.active
-        headers = ["Line"] + [cell.value for cell in sheet[1] if cell.value in
-                              ["species", "genus", "family", "order", "class", "phylum", "kingdom", "scientificName"]]
+        user_columns = entry_columns.get().split(',')
+
+        headers = ["Line"] + [cell.value for cell in sheet[1] if cell.value in user_columns]
         data = [[idx + 2] + [row[idx].value for idx, cell in enumerate(sheet[1]) if cell.value in headers[1:]]
                 for idx, row in enumerate(sheet.iter_rows(min_row=2))]
 
@@ -98,7 +96,6 @@ def load_spreadsheet(file_path, spreadsheet_name=""):
         load_data_in_treeview(tree, headers, data)
 
         if spreadsheet_name:
-            # Aqui você deve ter previamente definido a variável global 'tree2'
             load_spreadsheet_additional(f"{spreadsheet_name}.xlsx", tree2)
     except Exception as e:
         CTkMessagebox(title="Error", message=f"Erro ao carregar a planilha: {e}", icon="cancel")
@@ -125,6 +122,7 @@ def load_spreadsheet_additional(file_path, treeview):
     # Este evento é vinculado para permitir a edição de células com um duplo clique.
     # Note que on_double_click é definido para receber três argumentos: evento, treeview e filepath.
     treeview.bind('<Double-1>', lambda event: on_double_click(event, treeview, file_path))
+
 
 
 def on_double_click(event, treeview, filepath):
@@ -175,6 +173,8 @@ def on_double_click(event, treeview, filepath):
     button.pack()
 
 
+
+
 def update_cell(sheet, row, col, new_value, item, treeview):
     # Obtém a lista atual de valores da linha selecionada no treeview
     values = list(treeview.item(item, 'values'))
@@ -202,16 +202,20 @@ def load_data_in_treeview(treeview, headers, data):
 
 
 def create_layout():
-    global tree, tree2, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry
+    global tree, tree2, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry, entry_columns
+
+    log_file_path = "spreadsheet_log.txt"
+    if os.path.exists(log_file_path):
+        os.remove(log_file_path)
 
     root = Tk()
     root.title("Pytaxon: a tool for detection and correction of taxonomic data error")
     root.geometry("1400x700")
     root.configure(bg='#002F3E')
 
-    logo_image = Image.open("assets/PyTaxon.png")
-    logo_photoimage = ImageTk.PhotoImage(logo_image.resize((250, 250), Image.Resampling.LANCZOS))
-    logo_label = Label(master=root, image=logo_photoimage)
+    logo_image = Image.open("teste.png")
+    logo_photoimage = ImageTk.PhotoImage(logo_image.resize((315, 260), Image.Resampling.LANCZOS))
+    logo_label = Label(master=root, image=logo_photoimage, bg='#002F3E')
     logo_label.image = logo_photoimage
     logo_label.place(relx=0.015, rely=0.05)
 
@@ -288,3 +292,6 @@ def create_layout():
     root.mainloop()
 
 create_layout()
+
+
+

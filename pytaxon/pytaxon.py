@@ -111,7 +111,7 @@ class Pytaxon:
         for counter in tqdm(range(len(self._original_df))):
             choosen_taxon = self._original_df[self.column_vars[-1]][counter]
             if not choosen_taxon:
-                self.no_correspondence_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter])
+                self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
                 continue
 
             try:
@@ -158,7 +158,7 @@ class Pytaxon:
                 self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], lineage['species'][0], lineage['species'][1]) # species
             except:
                 self.no_correspondence_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter])
-            
+
             try:
                 self.compare_data(counter+2, self.column_vars[7], self._original_df[self.column_vars[7]][counter], lineage['scientificName'][0], lineage['scientificName'][1])  # scientificName
             except:
