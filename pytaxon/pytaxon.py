@@ -174,7 +174,11 @@ class Pytaxon:
 
             to_correct_df.to_excel(f'{spreadsheet_name}.xlsx')
         else:
-            print('No errors in spreadsheet')
+            log_message = 'No errors in spreadsheet'
+            print(log_message)
+            with open("spreadsheet_log.txt", "a") as log_file:
+                log_file.write(f"{log_message}\n")
+            print('log_message')
 
     def update_original_spreadsheet(self, original_spreadsheet:str, to_correct_spreadsheet:str, spreadsheet_name:str):
         original_data_df = self.read_spreadshet(original_spreadsheet)
