@@ -53,7 +53,7 @@ class PytaxonGUI:
         check_spreadsheet_name = self.check_spreadsheet_name.get()
 
         # Construir o comando para subprocess.run
-        command = ["python", "main.py", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
+        command = ["pytaxon", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
 
         try:
             subprocess.run(command, check=True)
