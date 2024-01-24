@@ -108,8 +108,7 @@ class Pytaxon:
                 return result
 
     def check_species_and_lineage(self, source_id):
-        species_list = self._original_df[self.column_vars[0]]
-        for counter in tqdm(range(len(species_list))):
+        for counter in tqdm(range(len(self._original_df))):
             choosen_taxon = self._original_df[self.column_vars[-1]][counter]
             if not choosen_taxon:
                 self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
