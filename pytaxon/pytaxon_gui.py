@@ -39,6 +39,7 @@ def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadshe
     except Exception as e:
         CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
 
+
 # Adicione esta nova função para limpar os Treeviews
 def clear_treeviews():
     global tree, tree2
@@ -48,6 +49,7 @@ def clear_treeviews():
         tree2.delete(item)
     tree['columns'] = []
     tree2['columns'] = []
+
 
 def run_pytaxon(input_path, source_id, check_spreadsheet_name):
     columns = "species,genus,family,order,class,phylum,kingdom,scientificName"
@@ -74,12 +76,14 @@ def run_pytaxon(input_path, source_id, check_spreadsheet_name):
     except Exception as e:
         CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
 
+
 def show_id_info():
     CTkMessagebox(message="IDs Data Sources:\n"
                           "1 - Catalogue of Life Checklist\n"
                           "4 - NBCI\n"
                           "11 - GBIF\n"
                           "180 - iNaturalist Taxonomy", option_1="Ok")
+
 
 def load_spreadsheet(file_path, spreadsheet_name=""):
     try:
@@ -121,7 +125,6 @@ def load_spreadsheet_additional(file_path, treeview):
     # Este evento é vinculado para permitir a edição de células com um duplo clique.
     # Note que on_double_click é definido para receber três argumentos: evento, treeview e filepath.
     treeview.bind('<Double-1>', lambda event: on_double_click(event, treeview, file_path))
-
 
 
 def on_double_click(event, treeview, filepath):
@@ -172,8 +175,6 @@ def on_double_click(event, treeview, filepath):
     button.pack()
 
 
-
-
 def update_cell(sheet, row, col, new_value, item, treeview):
     # Obtém a lista atual de valores da linha selecionada no treeview
     values = list(treeview.item(item, 'values'))
@@ -208,7 +209,7 @@ def create_layout():
     root.geometry("1400x700")
     root.configure(bg='#002F3E')
 
-    logo_image = Image.open("PyTaxon.png")
+    logo_image = Image.open("assets/PyTaxon.png")
     logo_photoimage = ImageTk.PhotoImage(logo_image.resize((250, 250), Image.Resampling.LANCZOS))
     logo_label = Label(master=root, image=logo_photoimage)
     logo_label.image = logo_photoimage
@@ -287,6 +288,3 @@ def create_layout():
     root.mainloop()
 
 create_layout()
-
-
-
