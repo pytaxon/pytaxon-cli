@@ -125,6 +125,11 @@ class Pytaxon:
                 continue
             
             try:
+                self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], lineage['scientificName'][0], lineage['scientificName'][1])  # scientificName
+            except:
+                self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
+
+            try:
                 self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['species'][0], lineage['species'][1]) # species
             except:
                 self.no_correspondence_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter])
@@ -158,11 +163,6 @@ class Pytaxon:
                 self.compare_data(counter+2, self.column_vars[7], self._original_df[self.column_vars[7]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
             except:
                 self.no_correspondence_data(counter+2, self.column_vars[7], self._original_df[self.column_vars[7]][counter])
-
-            try:
-                self.compare_data(counter+2, self.column_vars[8], self._original_df[self.column_vars[8]][counter], lineage['scientificName'][0], lineage['scientificName'][1])  # scientificName
-            except:
-                self.no_correspondence_data(counter+2, self.column_vars[8], self._original_df[self.column_vars[8]][counter])
 
     def create_to_correct_spreadsheet(self, spreadsheet_name):
         if self._incorrect_data:
