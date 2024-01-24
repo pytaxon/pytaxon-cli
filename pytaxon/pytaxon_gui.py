@@ -51,7 +51,7 @@ def clear_treeviews():
 
 
 def run_pytaxon(input_path, source_id, check_spreadsheet_name):
-    columns = "species,genus,family,order,class,phylum,kingdom,scientificName"
+    columns = entry_columns.get()
     command = ["python", "main.py", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
     try:
         subprocess.run(command, check=True)
@@ -86,8 +86,9 @@ def load_spreadsheet(file_path, spreadsheet_name=""):
     try:
         workbook = load_workbook(filename=file_path, data_only=True)
         sheet = workbook.active
-        headers = ["Line"] + [cell.value for cell in sheet[1] if cell.value in
-                              ["species", "genus", "family", "order", "class", "phylum", "kingdom", "scientificName"]]
+        user_columns = entry_columns.get().split(',')
+
+        headers = ["Line"] + [cell.value for cell in sheet[1] if cell.value in user_columns]
         data = [[idx + 2] + [row[idx].value for idx, cell in enumerate(sheet[1]) if cell.value in headers[1:]]
                 for idx, row in enumerate(sheet.iter_rows(min_row=2))]
 
@@ -95,7 +96,6 @@ def load_spreadsheet(file_path, spreadsheet_name=""):
         load_data_in_treeview(tree, headers, data)
 
         if spreadsheet_name:
-            # Aqui você deve ter previamente definido a variável global 'tree2'
             load_spreadsheet_additional(f"{spreadsheet_name}.xlsx", tree2)
     except Exception as e:
         CTkMessagebox(title="Error", message=f"Erro ao carregar a planilha: {e}", icon="cancel")
@@ -202,15 +202,19 @@ def load_data_in_treeview(treeview, headers, data):
 
 
 def create_layout():
-    global tree, tree2, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry
+    global tree, tree2, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry, entry_columns
+
+    log_file_path = "spreadsheet_log.txt"
+    if os.path.exists(log_file_path):
+        os.remove(log_file_path)
 
     root = Tk()
     root.title("Pytaxon: a tool for detection and correction of taxonomic data error")
     root.geometry("1400x700")
     root.configure(bg='#002F3E')
 
-    logo_image = Image.open("PyTaxon.png")
-    logo_photoimage = ImageTk.PhotoImage(logo_image.resize((310, 250), Image.Resampling.LANCZOS))
+    logo_image = Image.open("teste.png")
+    logo_photoimage = ImageTk.PhotoImage(logo_image.resize((315, 260), Image.Resampling.LANCZOS))
     logo_label = Label(master=root, image=logo_photoimage, bg='#002F3E')
     logo_label.image = logo_photoimage
     logo_label.place(relx=0.015, rely=0.05)
@@ -230,7 +234,7 @@ def create_layout():
     label_columns = ctk.CTkLabel(master=frame1, text="Column Names", fg_color=frame_color, text_color='white')
     label_columns.place(relx=0.05, rely=0.3)
     entry_columns = ctk.CTkEntry(master=frame1,
-                                 placeholder_text="follow this order: scientificName,species,genus,...,kingdom",
+                                 placeholder_text="Species, Genus, Family, Order, Class, Phylum, Kingdom, ScientificName",
                                  fg_color="white")
     entry_columns.place(relx=0.05, rely=0.4, relwidth=0.9)
 
