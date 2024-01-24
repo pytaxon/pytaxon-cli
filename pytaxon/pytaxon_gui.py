@@ -210,8 +210,8 @@ def create_layout():
     root.configure(bg='#002F3E')
 
     logo_image = Image.open("PyTaxon.png")
-    logo_photoimage = ImageTk.PhotoImage(logo_image.resize((250, 250), Image.Resampling.LANCZOS))
-    logo_label = Label(master=root, image=logo_photoimage)
+    logo_photoimage = ImageTk.PhotoImage(logo_image.resize((310, 250), Image.Resampling.LANCZOS))
+    logo_label = Label(master=root, image=logo_photoimage, bg='#002F3E')
     logo_label.image = logo_photoimage
     logo_label.place(relx=0.015, rely=0.05)
 
@@ -230,7 +230,7 @@ def create_layout():
     label_columns = ctk.CTkLabel(master=frame1, text="Column Names", fg_color=frame_color, text_color='white')
     label_columns.place(relx=0.05, rely=0.3)
     entry_columns = ctk.CTkEntry(master=frame1,
-                                 placeholder_text="Species, Genus, Family, Order, Class, Phylum, Kingdom, ScientificName",
+                                 placeholder_text="follow this order: scientificName,species,genus,...,kingdom",
                                  fg_color="white")
     entry_columns.place(relx=0.05, rely=0.4, relwidth=0.9)
 
