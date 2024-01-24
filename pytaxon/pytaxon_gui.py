@@ -1,12 +1,11 @@
 import os
-
 import customtkinter as ctk
 from tkinter import Tk, filedialog, ttk, Toplevel, Entry, Button
 from PIL import Image, ImageTk
 import subprocess
 from CTkMessagebox import CTkMessagebox
 from openpyxl import load_workbook
-
+from ttkthemes import ThemedTk
 from tkinter import Label
 
 
@@ -172,9 +171,6 @@ def on_double_click(event, treeview, filepath):
         entry, row_index, col_name, item, treeview, filepath))
     button.pack()
 
-
-
-
 def update_cell(sheet, row, col, new_value, item, treeview):
     # Obtém a lista atual de valores da linha selecionada no treeview
     values = list(treeview.item(item, 'values'))
@@ -208,7 +204,7 @@ def create_layout():
     if os.path.exists(log_file_path):
         os.remove(log_file_path)
 
-    root = Tk()
+    root = ThemedTk(theme="adapta")
     root.title("Pytaxon: a tool for detection and correction of taxonomic data error")
     root.geometry("1400x700")
     root.configure(bg='#002F3E')
