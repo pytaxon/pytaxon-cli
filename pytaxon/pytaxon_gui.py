@@ -204,7 +204,6 @@ def create_layout():
     if os.path.exists(log_file_path):
         os.remove(log_file_path)
 
-    #root = Tk()
     root = ThemedTk(theme="adapta")
     root.title("Pytaxon: a tool for detection and correction of taxonomic data error")
     root.geometry("1400x700")
