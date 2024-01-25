@@ -1,12 +1,11 @@
 import os
-
 import customtkinter as ctk
 from tkinter import Tk, filedialog, ttk, Toplevel, Entry, Button
 from PIL import Image, ImageTk
 import subprocess
 from CTkMessagebox import CTkMessagebox
 from openpyxl import load_workbook
-
+from ttkthemes import ThemedTk
 from tkinter import Label
 
 
@@ -24,7 +23,7 @@ def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadshe
     output_path = corrected_spreadsheet_entry.get()
 
     # Configura os argumentos do comando de forma similar à função run_pytaxon
-    command = ["python", "main.py", "-os", input_path, "-cs", check_spreadsheet_name, "-o", output_path]
+    command = ["pytaxon", "-os", input_path, "-cs", check_spreadsheet_name, "-o", output_path]
 
     try:
         subprocess.run(command, check=True)
@@ -52,7 +51,7 @@ def clear_treeviews():
 
 def run_pytaxon(input_path, source_id, check_spreadsheet_name):
     columns = entry_columns.get()
-    command = ["python", "main.py", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
+    command = ["pytaxon", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
     try:
         subprocess.run(command, check=True)
 
@@ -172,9 +171,6 @@ def on_double_click(event, treeview, filepath):
         entry, row_index, col_name, item, treeview, filepath))
     button.pack()
 
-
-
-
 def update_cell(sheet, row, col, new_value, item, treeview):
     # Obtém a lista atual de valores da linha selecionada no treeview
     values = list(treeview.item(item, 'values'))
@@ -208,7 +204,8 @@ def create_layout():
     if os.path.exists(log_file_path):
         os.remove(log_file_path)
 
-    root = Tk()
+    #root = Tk()
+    root = ThemedTk(theme="adapta")
     root.title("Pytaxon: a tool for detection and correction of taxonomic data error")
     root.geometry("1400x700")
     root.configure(bg='#002F3E')
@@ -234,7 +231,7 @@ def create_layout():
     label_columns = ctk.CTkLabel(master=frame1, text="Column Names", fg_color=frame_color, text_color='white')
     label_columns.place(relx=0.05, rely=0.3)
     entry_columns = ctk.CTkEntry(master=frame1,
-                                 placeholder_text="Species, Genus, Family, Order, Class, Phylum, Kingdom, ScientificName",
+                                 placeholder_text="Kingdom, Phylum, Class, Order, Family, Genus, Species, ScientificName",
                                  fg_color="white")
     entry_columns.place(relx=0.05, rely=0.4, relwidth=0.9)
 
@@ -263,19 +260,45 @@ def create_layout():
 
     frame3 = ctk.CTkFrame(master=root, corner_radius=10, fg_color=frame_color)
     frame3.place(relx=0.25, rely=0.44, relwidth=0.36, relheight=0.51)
+
+    # Configuração do Treeview dentro de frame3
+    tree_frame3 = ttk.Frame(frame3)
+    tree_frame3.place(relx=0.055, rely=0.1, relwidth=0.89, relheight=0.7)
+
+    tree = ttk.Treeview(tree_frame3)
+    tree.pack(side='left', fill='both', expand=True)
+
+    scrollbar_vertical3 = ttk.Scrollbar(tree_frame3, orient='vertical', command=tree.yview)
+    scrollbar_vertical3.pack(side='right', fill='y')
+
+    scrollbar_horizontal3 = ttk.Scrollbar(tree_frame3, orient='horizontal', command=tree.xview)
+    scrollbar_horizontal3.pack(side='bottom', fill='x')
+
+    tree.configure(yscrollcommand=scrollbar_vertical3.set, xscrollcommand=scrollbar_horizontal3.set)
+
+    tree.pack(fill='both', expand=True)
+
     label_user_spreadsheet = Label(master=root, text="User Spreadsheet", bg=frame_color, fg='white')
     label_user_spreadsheet.place(relx=0.27, rely=0.45)
 
-    tree = ttk.Treeview(frame3)
-    tree.place(relx=0.055, rely=0.1, relwidth=0.9, relheight=0.7)
-
+    # Frame 4 - Adicionando barras de rolagem
     frame4 = ctk.CTkFrame(master=root, corner_radius=10, fg_color=frame_color)
     frame4.place(relx=0.62, rely=0.44, relwidth=0.36, relheight=0.51)
-    label_check_spreadsheet = Label(master=root, text="Check Spreadsheet", bg=frame_color, fg='white')
-    label_check_spreadsheet.place(relx=0.64, rely=0.45)
 
-    tree2 = ttk.Treeview(frame4)
-    tree2.place(relx=0.055, rely=0.1, relwidth=0.9, relheight=0.7)
+    # Configuração do Treeview dentro de frame4
+    tree_frame4 = ttk.Frame(frame4)
+    tree_frame4.place(relx=0.055, rely=0.1, relwidth=0.89, relheight=0.7)
+
+    tree2 = ttk.Treeview(tree_frame4)
+    tree2.pack(side='left', fill='both', expand=True)
+
+    scrollbar_vertical4 = ttk.Scrollbar(tree_frame4, orient='vertical', command=tree2.yview)
+    scrollbar_vertical4.pack(side='right', fill='y')
+
+    scrollbar_horizontal4 = ttk.Scrollbar(tree_frame4, orient='horizontal', command=tree2.xview)
+    scrollbar_horizontal4.pack(side='bottom', fill='x')
+
+    tree2.configure(yscrollcommand=scrollbar_vertical4.set, xscrollcommand=scrollbar_horizontal4.set)
 
     corrected_spreadsheet_label = ctk.CTkLabel(master=frame4, text="Corrected spreadsheet name", fg_color=frame_color,
                                                text_color='white')
@@ -292,6 +315,3 @@ def create_layout():
     root.mainloop()
 
 create_layout()
-
-
-
