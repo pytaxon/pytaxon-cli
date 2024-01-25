@@ -63,7 +63,7 @@ class Pytaxon:
     def compare_data(self, append_ID_number, line, column_error, wrong_data, corrected_data, id_number) -> bool:
         if corrected_data != wrong_data:
             self._incorrect_data['Error Line'].append(line)
-            self._incorrect_data['Error Type'].append(column_error)
+            self._incorrect_data['Rank'].append(column_error)
             self._incorrect_data['Wrong Name'].append(wrong_data)
             self._incorrect_data['Suggested Name'].append(corrected_data)
             append_ID_number()
@@ -71,7 +71,7 @@ class Pytaxon:
 
     def no_correspondence_data(self, append_ID_number, line, column_error, wrong_data):
         self._incorrect_data['Error Line'].append(line)
-        self._incorrect_data['Error Type'].append(column_error)
+        self._incorrect_data['Rank'].append(column_error)
         self._incorrect_data['Wrong Name'].append(wrong_data)
         self._incorrect_data['Suggested Name'].append('No Correspondence')
         append_ID_number()
@@ -185,7 +185,7 @@ class Pytaxon:
 
         for index, row in to_correct_df.iterrows():
             if row['Change'] == 'y':
-                original_data_df.at[row['Error Line']-2, row['Error Type']] = row['Suggested Name']
+                original_data_df.at[row['Error Line']-2, row['Rank']] = row['Suggested Name']
         
         self._corrected_spreadsheet = original_data_df.copy()
 
