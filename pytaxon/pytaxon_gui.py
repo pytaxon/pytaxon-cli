@@ -209,7 +209,7 @@ def create_layout():
     root.geometry("1400x700")
     root.configure(bg='#002F3E')
 
-    logo_image = Image.open("teste.png")
+    logo_image = Image.open("assets/pytaxon_logo.png")
     logo_photoimage = ImageTk.PhotoImage(logo_image.resize((315, 260), Image.Resampling.LANCZOS))
     logo_label = Label(master=root, image=logo_photoimage, bg='#002F3E')
     logo_label.image = logo_photoimage

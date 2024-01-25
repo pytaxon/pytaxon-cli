@@ -108,8 +108,7 @@ class Pytaxon:
                 return result
 
     def check_species_and_lineage(self, source_id):
-        species_list = self._original_df[self.column_vars[0]]
-        for counter in tqdm(range(len(species_list))):
+        for counter in tqdm(range(len(self._original_df))):
             choosen_taxon = self._original_df[self.column_vars[-1]][counter]
             if not choosen_taxon:
                 self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
@@ -126,17 +125,17 @@ class Pytaxon:
                 continue
             
             try:
-                self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], lineage['species'][0], lineage['species'][1]) # species
+                self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
             except:
                 self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
-            
+
             try:
-                self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['genus'][0], lineage['genus'][1])  # genus
+                self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['phylum'][0], lineage['phylum'][1])  # phylum
             except:
-                    self.no_correspondence_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter])
+                self.no_correspondence_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter])
             
             try:
-                self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage['family'][0], lineage['family'][1])  # family
+                self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage['class'][0], lineage['class'][1])  # class
             except:
                 self.no_correspondence_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter])
             
@@ -146,17 +145,17 @@ class Pytaxon:
                 self.no_correspondence_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter])
             
             try:
-                self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage['class'][0], lineage['class'][1])  # class
+                self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage['family'][0], lineage['family'][1])  # family
             except:
                 self.no_correspondence_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter])
             
             try:
-                self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['phylum'][0], lineage['phylum'][1])  # phylum
+                self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['genus'][0], lineage['genus'][1])  # genus
             except:
-                self.no_correspondence_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter])
+                    self.no_correspondence_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter])
             
             try:
-                self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
+                self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], lineage['species'][0], lineage['species'][1]) # species
             except:
                 self.no_correspondence_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter])
 
