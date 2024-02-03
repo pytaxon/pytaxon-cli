@@ -10,6 +10,9 @@ import requests
 class Pytaxon:
     def __init__(self):
         self._original_df:pd.DataFrame = None
+
+        self.column_vars:list = None
+        
         self._incorrect_data:defaultdict = defaultdict(list)
 
         print(self.logo)
@@ -36,13 +39,12 @@ class Pytaxon:
             print(f"Connected to GNR api")
         time.sleep(1)
 
-    def read_spreadshet(self, original_spreadsheet:str) -> tuple:
+    def read_spreadshet(self, original_spreadsheet: str) -> pd.DataFrame:
         original_spreadsheet_path = original_spreadsheet.replace('"', '')
         original_spreadsheet = os.path.basename(original_spreadsheet_path)
         original_spreadsheet_name, _ = os.path.splitext(original_spreadsheet)
 
-        self._original_df = pd.read_excel(original_spreadsheet_path).\
-            reset_index().fillna('')
+        self._original_df = pd.read_excel(original_spreadsheet_path).reset_index().fillna('')
 
         print(f'Spreadsheet {original_spreadsheet_name} read.')
         time.sleep(1)
@@ -60,7 +62,7 @@ class Pytaxon:
             print(f"The following columns were not found: {', '.join(missing_columns)}")
             exit()
 
-    def compare_data(self, append_ID_number, line, column_error, wrong_data, corrected_data, id_number) -> bool:
+    def compare_data(self, append_ID_number, line, column_error, wrong_data, corrected_data, id_number) -> None:
         if corrected_data != wrong_data:
             self._incorrect_data['Error Line'].append(line)
             self._incorrect_data['Rank'].append(column_error)
@@ -69,7 +71,7 @@ class Pytaxon:
             append_ID_number()
             self._incorrect_data['Change'].append('y/n')
 
-    def no_correspondence_data(self, append_ID_number, line, column_error, wrong_data):
+    def no_correspondence_data(self, append_ID_number, line, column_error, wrong_data) -> None:
         self._incorrect_data['Error Line'].append(line)
         self._incorrect_data['Rank'].append(column_error)
         self._incorrect_data['Wrong Name'].append(wrong_data)
@@ -77,7 +79,7 @@ class Pytaxon:
         append_ID_number()
         self._incorrect_data['Change'].append('No Correspondence')
 
-    def verify_taxon(self, nome_taxon, id):
+    def verify_taxon(self, nome_taxon:str, id:int) -> dict:
         valid_ranks = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
         url = "http://resolver.globalnames.org/name_resolvers.json"
         params = {
@@ -107,7 +109,7 @@ class Pytaxon:
 
                 return result
 
-    def check_species_and_lineage(self, source_id):
+    def check_species_and_lineage(self, source_id:int) -> None:
         for counter in tqdm(range(len(self._original_df))):
             choosen_taxon = self._original_df[self.column_vars[-1]][counter]
             if not choosen_taxon:
@@ -152,7 +154,7 @@ class Pytaxon:
             try:
                 self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['genus'][0], lineage['genus'][1])  # genus
             except:
-                    self.no_correspondence_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter])
+                self.no_correspondence_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter])
             
             try:
                 self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], lineage['species'][0], lineage['species'][1]) # species
@@ -164,7 +166,7 @@ class Pytaxon:
             except:
                 self.no_correspondence_data(counter+2, self.column_vars[7], self._original_df[self.column_vars[7]][counter])
 
-    def create_to_correct_spreadsheet(self, spreadsheet_name):
+    def create_to_correct_spreadsheet(self, spreadsheet_name:str) -> None:
         if self._incorrect_data:
             to_correct_df = pd.DataFrame(self._incorrect_data).style.map(
                 lambda x: 'color: blue; text-decoration: underline;',
@@ -179,7 +181,7 @@ class Pytaxon:
                 log_file.write(f"{log_message}\n")
             print('log_message')
 
-    def update_original_spreadsheet(self, original_spreadsheet:str, to_correct_spreadsheet:str, spreadsheet_name:str):
+    def update_original_spreadsheet(self, original_spreadsheet:str, to_correct_spreadsheet:str, spreadsheet_name:str) -> None:
         original_data_df = self.read_spreadshet(original_spreadsheet)
         to_correct_df = self.read_spreadshet(to_correct_spreadsheet)
 
@@ -190,7 +192,7 @@ class Pytaxon:
         self._corrected_spreadsheet = original_data_df.copy()
 
         try:
-            self._corrected_spreadsheet.to_excel(f'{spreadsheet_name}.xlsx')
+            self._corrected_spreadsheet.to_excel(f'{spreadsheet_name}.xlsx', index=False)
         except Exception as e:
             print('Error to update original spreadsheet: ', e)
 
