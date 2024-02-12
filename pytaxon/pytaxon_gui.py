@@ -31,7 +31,7 @@ def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadshe
     output_path = corrected_spreadsheet_entry.get()
 
     # Configura os argumentos do comando de forma similar à função run_pytaxon
-    command = ["python", "main.py", "-os", input_path, "-cs", check_spreadsheet_name, "-o", output_path]
+    command = ["pytaxon", "-os", input_path, "-cs", check_spreadsheet_name, "-o", output_path]
 
     try:
         subprocess.run(command, check=True)
@@ -63,7 +63,7 @@ def clear_treeviews():
 
 def run_pytaxon(input_path, source_id, check_spreadsheet_name):
     columns = entry_columns.get()
-    command = ["python", "main.py", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
+    command = ["pytaxon", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
     try:
         subprocess.run(command, check=True)
 
@@ -163,7 +163,7 @@ def load_spreadsheet_additional(file_path, treeview):
     # Mapeia os cabeçalhos para seus índices
     headers = [cell.value for cell in sheet_spreadsheet[1]]
     # Define as colunas que desejamos exibir no Treeview
-    desired_columns = ['Error Line', 'Error Type', 'Wrong Name', 'Suggested Name', 'GBIF ID Source', 'Change']
+    desired_columns = ['Error Line', 'Rank', 'Wrong Name', 'Suggested Name', 'GBIF ID Source', 'Change']
     treeview['columns'] = desired_columns
     treeview['show'] = 'headings'
 
@@ -483,7 +483,7 @@ def create_layout():
     root.geometry("1400x700")
     root.configure(bg='#002F3E')
 
-    logo_image = Image.open("teste.png")
+    logo_image = Image.open("assets/pytaxon_logo.png")
     logo_photoimage = ImageTk.PhotoImage(logo_image.resize((315, 260), Image.Resampling.LANCZOS))
     logo_label = Label(master=root, image=logo_photoimage, bg='#002F3E')
     logo_label.image = logo_photoimage
