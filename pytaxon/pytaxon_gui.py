@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import customtkinter
 import customtkinter as ctk
@@ -13,6 +14,7 @@ from ttkthemes import ThemedTk
 from tkinter import Label
 import openpyxl
 from collections import Counter
+import pkg_resources
 
 def open_file(entry_widget):
     filetypes = [("Excel files", "*.xlsx"), ("CSV files", "*.csv"), ("All files", "*.*")]
@@ -425,7 +427,6 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
                                                      corner_radius=8)
     total_occurrences_label.pack(pady=(10, 0))  # pack com um padding vertical apenas na parte superior
 
-
     # Criar label para exibir o valor de total_occurrences
     total_occurrences_value_label = customtkinter.CTkLabel(master=parent_frame_a,
                                                            text=str(total_occurrences),
@@ -435,9 +436,6 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
     total_occurrences_value_label.pack(pady=(5, 10))  # pack com padding vertical na parte superior e inferior
     add_pie_chart(parent_frame_a, percentage_occurrences_with_error)
 
-
-
-
     # Criar label para "Total taxon names"
     taxon_count_label = customtkinter.CTkLabel(master=parent_frame_b,
                                                      text="Total Taxon Names",
@@ -445,8 +443,6 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
                                                      font=(None, 26),
                                                      corner_radius=8)
     taxon_count_label.pack(pady=(10, 0))  # pack com um padding vertical apenas na parte superior
-
-
 
     # Criar label para exibir o valor de Total taxon names:
     taxon_count_value_label = customtkinter.CTkLabel(master=parent_frame_b,
@@ -469,6 +465,9 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
     top_taxon_errors_label.pack(pady=(10, 0))
     add_bar_graph(parent_frame_c, top_taxon_errors)
 
+def pytaxon_logo():
+    caminho_imagem = pkg_resources.resource_filename('pytaxon', 'assets/pytaxon_logo.png')
+    return caminho_imagem
 
 def create_layout():
     global tree, tree2, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry, entry_columns, frame2,frame_a, frame_b, frame_c
@@ -483,7 +482,7 @@ def create_layout():
     root.geometry("1400x700")
     root.configure(bg='#002F3E')
 
-    logo_image = Image.open("assets/pytaxon_logo.png")
+    logo_image = Image.open(pytaxon_logo())
     logo_photoimage = ImageTk.PhotoImage(logo_image.resize((315, 260), Image.Resampling.LANCZOS))
     logo_label = Label(master=root, image=logo_photoimage, bg='#002F3E')
     logo_label.image = logo_photoimage
