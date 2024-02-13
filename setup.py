@@ -8,7 +8,7 @@ with open('README.md', 'r', encoding='utf-8') as arq:
 
 setup(
     name='pytaxon',
-    version='5.0.3',
+    version='5.0.6',
     setup_requires=['wheel'],
     license='MIT License',
     author='Marco Aurélio Proença Neto, Marcos Paulo Alves de Sousa',
@@ -18,9 +18,11 @@ setup(
     keywords='pytaxon',
     description=u'Pytaxon é uma aplicação open source de auxílio à pesquisa para identificação de erros e correção de nomenclatura taxonômica das espécies da biodiversidade',
     packages=['pytaxon'],
+    package_data={'pytaxon': ['assets/pytaxon_logo.png']},
     entry_points={
         'console_scripts': [
             'pytaxon = pytaxon.main:main',
+            'pytaxonGUI = pytaxon.pytaxon_gui:pytaxon_gui'
         ],
     },
     install_requires=['pandas', 'openpyxl', 'tqdm', 'xlrd', 'requests', 
