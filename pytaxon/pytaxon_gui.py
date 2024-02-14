@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import customtkinter
 import customtkinter as ctk
@@ -13,6 +14,7 @@ from ttkthemes import ThemedTk
 from tkinter import Label
 import openpyxl
 from collections import Counter
+import pkg_resources
 
 def open_file(entry_widget):
     filetypes = [("Excel files", "*.xlsx"), ("CSV files", "*.csv"), ("All files", "*.*")]
@@ -479,6 +481,11 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
     add_bar_graph(parent_frame_c, top_taxon_errors)
 
 
+def pytaxon_logo():
+    caminho_imagem = pkg_resources.resource_filename('pytaxon', 'assets/pytaxon_logo.png')
+    return caminho_imagem
+
+
 def create_layout():
     global tree2, textbox, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry, entry_columns, frame2,frame_a, frame_b, frame_c
 
@@ -493,7 +500,7 @@ def create_layout():
     root.geometry("1400x700")
     root.configure(bg='#002F3E')
 
-    logo_image = Image.open("../assets/pytaxon_logo.png")
+    logo_image = Image.open(pytaxon_logo())
     logo_photoimage = ImageTk.PhotoImage(logo_image.resize((315, 260), Image.Resampling.LANCZOS))
     logo_label = Label(master=root, image=logo_photoimage, bg='#002F3E')
     logo_label.image = logo_photoimage
