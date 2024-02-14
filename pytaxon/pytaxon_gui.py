@@ -35,7 +35,9 @@ def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadshe
 
     try:
         subprocess.run(command, check=True)
-        CTkMessagebox(message="Pytaxon correction has been run successfully.", icon="check", option_1="Ok")
+        #CTkMessagebox(message="Pytaxon correction has been run successfully.", icon="check", option_1="Ok")
+        textbox.insert('end', "Pytaxon correction has been run successfully.\n")
+
         clear_treeviews()  # Limpa as visualizações após a execução bem-sucedida
 
         # Limpa o campo corrected_spreadsheet_entry após a execução bem-sucedida
@@ -46,18 +48,21 @@ def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadshe
 
 
     except subprocess.CalledProcessError as e:
-        CTkMessagebox(title="Error", message=f"An error occurred while running Pytaxon correction: {e}", icon="cancel")
+        #CTkMessagebox(title="Error", message=f"An error occurred while running Pytaxon correction: {e}", icon="cancel")
+        textbox.insert('end', "An error occurred while running Pytaxon correction: {e}\n")
     except Exception as e:
-        CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
+        #CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
+        textbox.insert('end', "An unexpected error occurred: {e}\n")
+
 
 # Adicione esta nova função para limpar os Treeviews
 def clear_treeviews():
-    global tree, tree2
-    for item in tree.get_children():
-        tree.delete(item)
+    global tree2
+    #for item in tree.get_children():
+     #   tree.delete(item)
     for item in tree2.get_children():
         tree2.delete(item)
-    tree['columns'] = []
+    #tree['columns'] = []
     tree2['columns'] = []
 
 
@@ -74,18 +79,22 @@ def run_pytaxon(input_path, source_id, check_spreadsheet_name):
             with open(log_file_path, 'r') as file:
                 content = file.read().strip()
                 if content == 'No errors in spreadsheet':
-                    CTkMessagebox(message="No errors in spreadsheet.", icon="check", option_1="Ok")
+                    #CTkMessagebox(message="No errors in spreadsheet.", icon="check", option_1="Ok")
+                    textbox.insert('end', "No errors in spreadsheet.\n")
                     os.remove(log_file_path)  # Apagar o arquivo de log
                     clear_treeviews()
                     return
 
-        CTkMessagebox(message="Pytaxon has been run successfully.", icon="check", option_1="Ok")
+        #CTkMessagebox(message="Pytaxon has been run successfully.", icon="check", option_1="Ok")
+        textbox.insert('end', "Pytaxon has been run successfully.\n")
         load_spreadsheet(input_path, check_spreadsheet_name)
         calculate_statistics(input_path, check_spreadsheet_name, frame2)
     except subprocess.CalledProcessError as e:
-        CTkMessagebox(title="Error", message=f"An error occurred while running Pytaxon: {e}", icon="cancel")
+        #CTkMessagebox(title="Error", message=f"An error occurred while running Pytaxon: {e}", icon="cancel")
+        textbox.insert('end', "An error occurred while running Pytaxon: {e}\n")
     except Exception as e:
-        CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
+        #CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
+        textbox.insert('end', "An unexpected error occurred: {e}\n")
 
 def show_id_info():
     CTkMessagebox(message="IDs Data Sources:\n"
@@ -105,7 +114,7 @@ def load_spreadsheet(file_path, spreadsheet_name=""):
                 for idx, row in enumerate(sheet.iter_rows(min_row=2))]
 
         # Aqui você deve ter previamente definido a variável global 'tree'
-        load_data_in_treeview(tree, headers, data)
+        #load_data_in_treeview(tree, headers, data)
 
         if spreadsheet_name:
             load_spreadsheet_additional(f"{spreadsheet_name}.xlsx", tree2)
@@ -471,7 +480,7 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
 
 
 def create_layout():
-    global tree, tree2, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry, entry_columns, frame2,frame_a, frame_b, frame_c
+    global tree2, textbox, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry, entry_columns, frame2,frame_a, frame_b, frame_c
 
     log_file_path = "spreadsheet_log.txt"
     if os.path.exists(log_file_path):
@@ -479,11 +488,12 @@ def create_layout():
 
     #root = Tk()
     root = ThemedTk(theme="adapta")
+
     root.title("Pytaxon: a tool for detection and correction of taxonomic data error")
     root.geometry("1400x700")
     root.configure(bg='#002F3E')
 
-    logo_image = Image.open("assets/pytaxon_logo.png")
+    logo_image = Image.open("../assets/pytaxon_logo.png")
     logo_photoimage = ImageTk.PhotoImage(logo_image.resize((315, 260), Image.Resampling.LANCZOS))
     logo_label = Label(master=root, image=logo_photoimage, bg='#002F3E')
     logo_label.image = logo_photoimage
@@ -520,6 +530,7 @@ def create_layout():
     label_check_spreadsheet = ctk.CTkLabel(master=frame1, text="Check Spreadsheet Name", fg_color=frame_color,
                                            text_color='white')
     label_check_spreadsheet.place(relx=0.05, rely=0.7)
+
     entry_spreadsheet_name = ctk.CTkEntry(master=frame1, placeholder_text="Spreadsheet name, no extension",
                                           fg_color="white")
     entry_spreadsheet_name.place(relx=0.05, rely=0.8, relwidth=0.65)
@@ -532,35 +543,33 @@ def create_layout():
     frame2.place(relx=0.25, rely=0.05, relwidth=0.73, relheight=0.38)
 
     frame3 = ctk.CTkFrame(master=root, corner_radius=10, fg_color=frame_color)
-    frame3.place(relx=0.25, rely=0.44, relwidth=0.36, relheight=0.51)
+    frame3.place(relx=0.25, rely=0.44, relwidth=0.36 * 0.65, relheight=0.51)
 
     # Configuração do Treeview dentro de frame3
     tree_frame3 = ttk.Frame(frame3)
-    tree_frame3.place(relx=0.055, rely=0.1, relwidth=0.89, relheight=0.7)
+    tree_frame3.place(relx=0.049, rely=0.1, relwidth=0.91, relheight=0.7)
 
-    tree = ttk.Treeview(tree_frame3)
-    tree.pack(side='left', fill='both', expand=True)
+    textbox = ctk.CTkTextbox(master=tree_frame3)
+    textbox.pack(side='left', fill='both', expand=True)
 
-    scrollbar_vertical3 = ttk.Scrollbar(tree_frame3, orient='vertical', command=tree.yview)
-    scrollbar_vertical3.pack(side='right', fill='y')
 
-    scrollbar_horizontal3 = ttk.Scrollbar(tree_frame3, orient='horizontal', command=tree.xview)
-    scrollbar_horizontal3.pack(side='bottom', fill='x')
+    label_user_spreadsheet = Label(master=root, text="Running status", bg=frame_color, fg='white')
+    label_user_spreadsheet.place(relx=0.26, rely=0.45)
 
-    tree.configure(yscrollcommand=scrollbar_vertical3.set, xscrollcommand=scrollbar_horizontal3.set)
-    tree.bind('<Double-1>', lambda event: on_double_click(event, tree, entry_input.get()))
+    original_relwidth_frame4 = 0.36
+    increase_factor = 0.35
+    new_relwidth_frame4 = original_relwidth_frame4 * (1 + increase_factor)  # Aumenta a largura em 30%
+    leftward_shift = original_relwidth_frame4 * increase_factor  # Calcula quanto o frame4 deve se mover para a esquerda
 
-    tree.pack(fill='both', expand=True)
-
-    label_user_spreadsheet = Label(master=root, text="User Spreadsheet", bg=frame_color, fg='white')
-    label_user_spreadsheet.place(relx=0.27, rely=0.45)
+    # O novo relx é o antigo relx menos o deslocamento para a esquerda
+    new_relx_frame4 = 0.62 - leftward_shift
 
     # Frame 4 - Adicionando barras de rolagem
     frame4 = ctk.CTkFrame(master=root, corner_radius=10, fg_color=frame_color)
-    frame4.place(relx=0.62, rely=0.44, relwidth=0.36, relheight=0.51)
+    frame4.place(relx=new_relx_frame4, rely=0.44, relwidth=new_relwidth_frame4, relheight=0.51)
 
     label_check_spreadsheet = Label(master=root, text="Check Spreadsheet", bg=frame_color, fg='white')
-    label_check_spreadsheet.place(relx=0.64, rely=0.45)
+    label_check_spreadsheet.place(relx=0.50, rely=0.45)
 
     # Definição da cor para os novos frames A, B, C
     new_frame_color = "#004C70"
@@ -588,9 +597,13 @@ def create_layout():
     frame_c = ctk.CTkFrame(master=frame2, corner_radius=10, fg_color=new_frame_color)
     frame_c.place(relx=spacing * 3 + 2 * frame_width, rely=rely_adjusted, relwidth=frame_width, relheight=frame_height)
 
+    # Aumentar a largura do tree2 em 20%
+    tree2_width_increase_factor = 1.09  # Aumentar a largura em 20%
+
     # Configuração do Treeview dentro de frame4
     tree_frame4 = ttk.Frame(frame4)
-    tree_frame4.place(relx=0.055, rely=0.1, relwidth=0.89, relheight=0.7)
+    tree_frame4.place(relx=0.015, rely=0.1, relwidth=0.89 * tree2_width_increase_factor, relheight=0.7)
+
 
     tree2 = ttk.Treeview(tree_frame4)
     tree2.pack(side='left', fill='both', expand=True)
@@ -602,12 +615,12 @@ def create_layout():
     scrollbar_horizontal4.pack(side='bottom', fill='x')
 
     tree2.configure(yscrollcommand=scrollbar_vertical4.set, xscrollcommand=scrollbar_horizontal4.set)
-    tree2.bind('<Double-1>', lambda event: on_double_click(event, tree2, entry_input.get()))
+    tree2.bind('<Double-1>', lambda event: on_double_click(event, tree2, f"{entry_spreadsheet_name.get()}.xlsx"))
 
 
-    corrected_spreadsheet_label = ctk.CTkLabel(master=frame4, text="Corrected spreadsheet name", fg_color=frame_color,
+    corrected_spreadsheet_label = ctk.CTkLabel(master=frame4, text="Corrected spreadsheet name:", fg_color=frame_color,
                                                text_color='white')
-    corrected_spreadsheet_label.place(relx=0.055, rely=0.82)
+    corrected_spreadsheet_label.place(relx=0.15, rely=0.82)
 
     corrected_spreadsheet_entry = ctk.CTkEntry(master=frame4, fg_color="white")
     corrected_spreadsheet_entry.place(relx=0.45, rely=0.82, relwidth=0.50)
