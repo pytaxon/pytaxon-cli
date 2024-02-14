@@ -8,7 +8,7 @@ with open('README.md', 'r', encoding='utf-8') as arq:
 
 setup(
     name='pytaxon',
-    version='5.0.6',
+    version='5.0.8',
     setup_requires=['wheel'],
     license='MIT License',
     author='Marco Aurélio Proença Neto, Marcos Paulo Alves de Sousa',
