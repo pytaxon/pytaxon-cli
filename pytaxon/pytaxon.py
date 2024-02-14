@@ -44,7 +44,7 @@ class Pytaxon:
         original_spreadsheet = os.path.basename(original_spreadsheet_path)
         original_spreadsheet_name, _ = os.path.splitext(original_spreadsheet)
 
-        self._original_df = pd.read_excel(original_spreadsheet_path).reset_index().fillna('')
+        self._original_df = pd.read_excel(original_spreadsheet_path).fillna('')
 
         print(f'Spreadsheet {original_spreadsheet_name} read.')
         time.sleep(1)
