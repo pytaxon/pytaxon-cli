@@ -27,6 +27,6 @@ setup(
     },
     install_requires=['pandas', 'openpyxl', 'tqdm', 'xlrd', 'requests', 
                       'argparse', 'Jinja2', 'ttkthemes', 'tk', 'matplotlib', 
-                      'customtkinter', 'CTkMessagebox', 'setuptools],
+                      'customtkinter', 'CTkMessagebox', 'setuptools'],
     url='https://github.com/pytaxon'
 )
