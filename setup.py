@@ -8,7 +8,7 @@ with open('README.md', 'r', encoding='utf-8') as arq:
 
 setup(
     name='pytaxon',
-    version='5.0.9',
+    version='v0.0.1',
     setup_requires=['wheel'],
     license='MIT License',
     author='Marco Aurélio Proença Neto, Marcos Paulo Alves de Sousa',
@@ -26,7 +26,7 @@ setup(
         ],
     },
     install_requires=['pandas', 'openpyxl', 'tqdm', 'xlrd', 'requests', 
-                      'argparse', 'Jinja2', 'ttkthemes', 'tk', 'matplotlib', 
-                      'customtkinter', 'CTkMessagebox', 'setuptools'],
+                      'argparse', 'ttkthemes', 'tk', 'matplotlib', 'customtkinter', 
+                      'CTkMessagebox', 'setuptools'],
     url='https://github.com/pytaxon'
 )
