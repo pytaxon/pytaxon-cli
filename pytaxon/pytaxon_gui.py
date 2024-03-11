@@ -51,10 +51,10 @@ def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadshe
 
     except subprocess.CalledProcessError as e:
         #CTkMessagebox(title="Error", message=f"An error occurred while running Pytaxon correction: {e}", icon="cancel")
-        textbox.insert('end', "An error occurred while running Pytaxon correction: {e}\n")
+        textbox.insert('end', f"An error occurred while running Pytaxon correction: {e}\n")
     except Exception as e:
         #CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
-        textbox.insert('end', "An unexpected error occurred: {e}\n")
+        textbox.insert('end', f"An unexpected error occurred: {e}\n")
 
 
 # Adicione esta nova função para limpar os Treeviews
@@ -96,7 +96,7 @@ def run_pytaxon(input_path, source_id, check_spreadsheet_name):
         textbox.insert('end', "An error occurred while running Pytaxon: {e}\n")
     except Exception as e:
         #CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
-        textbox.insert('end', "An unexpected error occurred: {e}\n")
+        textbox.insert('end', f"An unexpected error occurred: {e}\n")
 
 def show_id_info():
     CTkMessagebox(message="IDs Data Sources:\n"
@@ -484,6 +484,11 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
 def pytaxon_logo():
     caminho_imagem = pkg_resources.resource_filename('pytaxon', 'assets/pytaxon_logo.png')
     return caminho_imagem
+    # try:
+    #     return f'{os.getcwd()}/_internal/pytaxon/assets/pytaxon_logo.png'
+    # except:
+    #     return f'{os.getcwd()}/pytaxon/assets/pytaxon_logo.png'
+    
 
 
 def create_layout():
