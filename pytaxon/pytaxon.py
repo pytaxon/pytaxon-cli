@@ -8,8 +8,8 @@ import requests
 
 
 class Pytaxon:
-    def __init__(self):
-        self._id_number = None
+    def __init__(self, source_id):
+        self._source_id:int = source_id
 
         self._original_df:pd.DataFrame = None
 
@@ -53,16 +53,6 @@ class Pytaxon:
 
         return self._original_df
     
-    def choose_id(self, id_var:int):
-        id_links = {
-            1: ('COL ID Source', f'=HYPERLINK("https://www.checklistbank.org/dataset/278910/taxon/{self._id_number}", "{self._id_number}")'),
-            4: ('NCBI ID Source', f'=HYPERLINK("https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id={self._id_number}", "{self._id_number}")'), 
-            11: ('GBIF ID Source', f'=HYPERLINK("https://www.gbif.org/species/{self._id_number}", "{self._id_number}")'),
-            180: ('INAT ID Source', f'=HYPERLINK("https://www.inaturalist.org/taxa/{self._id_number}, {self._id_number}")')
-        }
-
-        return id_links[id_var][0], id_links[id_var][1]
-
     def read_columns(self, column_vars:list) -> None:
         self.column_vars = [column.strip() for column in column_vars.split(',')]
 
@@ -75,20 +65,32 @@ class Pytaxon:
             exit()
 
     def compare_data(self, append_ID_number, line, column_error, wrong_data, corrected_data, id_number) -> None:
+        def choose_id():
+            id_links = {
+                1: ('COL ID Source', f'=HYPERLINK("https://www.checklistbank.org/dataset/278910/taxon/{id_number}", "{id_number}")'),
+                4: ('NCBI ID Source', f'=HYPERLINK("https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id={id_number}", "{id_number}")'), 
+                11: ('GBIF ID Source', f'=HYPERLINK("https://www.gbif.org/species/{id_number}", "{id_number}")'),
+                180: ('INAT ID Source', f'=HYPERLINK("https://www.inaturalist.org/taxa/{id_number}, {id_number}")')
+            }
+
+            return id_links[self._source_id][0], id_links[self._source_id][1]
+
+        self._id_column_name, id_hyperlink = choose_id(id_number)
+
         try:
             if corrected_data != wrong_data:
                 self._incorrect_data['Error Line'].append(line)
                 self._incorrect_data['Rank'].append(column_error)
                 self._incorrect_data['Wrong Name'].append(wrong_data)
                 self._incorrect_data['Suggested Name'].append(corrected_data)
-                # self._incorrect_data[a].append(b)
+                self._incorrect_data[self._id_column_name].append(id_hyperlink)
                 self._incorrect_data['Change'].append('y/n')
         except:
             self._incorrect_data['Error Line'].append(line)
             self._incorrect_data['Rank'].append(column_error)
             self._incorrect_data['Wrong Name'].append(wrong_data)
             self._incorrect_data['Suggested Name'].append('No Correspondence')
-            append_ID_number()
+            self._incorrect_data[self._id_column_name].append('No ID')
             self._incorrect_data['Change'].append('No Correspondence')
 
     def verify_taxon(self, nome_taxon:str, id:int) -> dict:
@@ -125,17 +127,16 @@ class Pytaxon:
         for counter in tqdm(range(len(self._original_df))):
             choosen_taxon = self._original_df[self.column_vars[-1]][counter]
             if not choosen_taxon:
-                self.no_correspondence_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
+                self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
                 continue
-
             try:
                 lineage = self.verify_taxon(choosen_taxon, source_id)
             except:
-                self.no_correspondence_data(counter+2, 'Data Incomplete', choosen_taxon)
+                self.compare_data(counter+2, 'Data Incomplete', choosen_taxon)
                 continue
             
             if not lineage:
-                self.no_correspondence_data(counter+2, 'Taxon Not Found', choosen_taxon)
+                self.compare_data(counter+2, 'Taxon Not Found', choosen_taxon)
                 continue
             
             self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
@@ -151,7 +152,7 @@ class Pytaxon:
         if self._incorrect_data:
             to_correct_df = pd.DataFrame(self._incorrect_data).style.map(
                 lambda x: 'color: blue; text-decoration: underline;',
-                subset=self.source_id,
+                subset=self._id_column_name,
             )
 
             to_correct_df.to_excel(f'{spreadsheet_name}.xlsx')
