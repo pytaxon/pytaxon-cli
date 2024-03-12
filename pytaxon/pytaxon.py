@@ -9,6 +9,8 @@ import requests
 
 class Pytaxon:
     def __init__(self):
+        self._id_number = None
+
         self._original_df:pd.DataFrame = None
 
         self.column_vars:list = None
@@ -50,6 +52,16 @@ class Pytaxon:
         time.sleep(1)
 
         return self._original_df
+    
+    def choose_id(self, id_var:int):
+        id_links = {
+            1: ('COL ID Source', f'=HYPERLINK("https://www.checklistbank.org/dataset/278910/taxon/{self._id_number}", "{self._id_number}")'),
+            4: ('NCBI ID Source', f'=HYPERLINK("https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id={self._id_number}", "{self._id_number}")'), 
+            11: ('GBIF ID Source', f'=HYPERLINK("https://www.gbif.org/species/{self._id_number}", "{self._id_number}")'),
+            180: ('INAT ID Source', f'=HYPERLINK("https://www.inaturalist.org/taxa/{self._id_number}, {self._id_number}")')
+        }
+
+        return id_links[id_var][0], id_links[id_var][1]
 
     def read_columns(self, column_vars:list) -> None:
         self.column_vars = [column.strip() for column in column_vars.split(',')]
@@ -63,21 +75,21 @@ class Pytaxon:
             exit()
 
     def compare_data(self, append_ID_number, line, column_error, wrong_data, corrected_data, id_number) -> None:
-        if corrected_data != wrong_data:
+        try:
+            if corrected_data != wrong_data:
+                self._incorrect_data['Error Line'].append(line)
+                self._incorrect_data['Rank'].append(column_error)
+                self._incorrect_data['Wrong Name'].append(wrong_data)
+                self._incorrect_data['Suggested Name'].append(corrected_data)
+                # self._incorrect_data[a].append(b)
+                self._incorrect_data['Change'].append('y/n')
+        except:
             self._incorrect_data['Error Line'].append(line)
             self._incorrect_data['Rank'].append(column_error)
             self._incorrect_data['Wrong Name'].append(wrong_data)
-            self._incorrect_data['Suggested Name'].append(corrected_data)
+            self._incorrect_data['Suggested Name'].append('No Correspondence')
             append_ID_number()
-            self._incorrect_data['Change'].append('y/n')
-
-    def no_correspondence_data(self, append_ID_number, line, column_error, wrong_data) -> None:
-        self._incorrect_data['Error Line'].append(line)
-        self._incorrect_data['Rank'].append(column_error)
-        self._incorrect_data['Wrong Name'].append(wrong_data)
-        self._incorrect_data['Suggested Name'].append('No Correspondence')
-        append_ID_number()
-        self._incorrect_data['Change'].append('No Correspondence')
+            self._incorrect_data['Change'].append('No Correspondence')
 
     def verify_taxon(self, nome_taxon:str, id:int) -> dict:
         valid_ranks = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
