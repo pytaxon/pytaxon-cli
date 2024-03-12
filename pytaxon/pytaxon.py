@@ -64,7 +64,7 @@ class Pytaxon:
             print(f"The following columns were not found: {', '.join(missing_columns)}")
             exit()
 
-    def compare_data(self, append_ID_number, line, column_error, wrong_data, corrected_data, id_number) -> None:
+    def compare_data(self, line, column_error, wrong_data, corrected_data=None, id_number=None) -> tuple:
         def choose_id():
             id_links = {
                 1: ('COL ID Source', f'=HYPERLINK("https://www.checklistbank.org/dataset/278910/taxon/{id_number}", "{id_number}")'),
