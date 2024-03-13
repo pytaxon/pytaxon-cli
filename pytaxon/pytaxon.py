@@ -8,7 +8,7 @@ import requests
 
 
 class Pytaxon:
-    def __init__(self, source_id):
+    def __init__(self, source_id=None):
         self._source_id:int = source_id
 
         self._original_df:pd.DataFrame = None
@@ -75,7 +75,7 @@ class Pytaxon:
 
             return id_links[self._source_id][0], id_links[self._source_id][1]
 
-        self._id_column_name, id_hyperlink = choose_id(id_number)
+        self._id_column_name, id_hyperlink = choose_id()
 
         try:
             if corrected_data != wrong_data:
@@ -93,13 +93,13 @@ class Pytaxon:
             self._incorrect_data[self._id_column_name].append('No ID')
             self._incorrect_data['Change'].append('No Correspondence')
 
-    def verify_taxon(self, nome_taxon:str, id:int) -> dict:
+    def verify_taxon(self, nome_taxon:str) -> dict:
         valid_ranks = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
         url = "http://resolver.globalnames.org/name_resolvers.json"
         params = {
             'names': nome_taxon,
             'best_match_only': True,
-            'data_source_ids': id,
+            'data_source_ids': self._source_id,
         }
         response = requests.get(url, params=params)
 
@@ -123,14 +123,14 @@ class Pytaxon:
 
                 return result
 
-    def check_species_and_lineage(self, source_id:int) -> None:
+    def check_species_and_lineage(self) -> None:
         for counter in tqdm(range(len(self._original_df))):
             choosen_taxon = self._original_df[self.column_vars[-1]][counter]
             if not choosen_taxon:
                 self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter])
                 continue
             try:
-                lineage = self.verify_taxon(choosen_taxon, source_id)
+                lineage = self.verify_taxon(choosen_taxon)
             except:
                 self.compare_data(counter+2, 'Data Incomplete', choosen_taxon)
                 continue
@@ -177,67 +177,3 @@ class Pytaxon:
             self._corrected_spreadsheet.to_excel(f'{spreadsheet_name}.xlsx', index=False)
         except Exception as e:
             print('Error to update original spreadsheet: ', e)
-
-
-class Pytaxon_GBIF(Pytaxon):
-    def compare_data(self, line, column_error, wrong_data, corrected_data, id_number) -> bool:
-        def append_ID_number():
-            self._incorrect_data['GBIF ID Source'].append(f'=HYPERLINK("https://www.gbif.org/species/{id_number}", "{id_number}")')
-        super().compare_data(append_ID_number, line, column_error, wrong_data, corrected_data, id_number)
-
-    def create_to_correct_spreadsheet(self, spreadsheet_name):
-        self.source_id = ['GBIF ID Source']
-        super().create_to_correct_spreadsheet(spreadsheet_name)
-
-    def no_correspondence_data(self, line, column_error, wrong_data):
-        def append_ID_number():
-            self._incorrect_data['GBIF ID Source'].append('No Correspondence')
-        super().no_correspondence_data(append_ID_number, line, column_error, wrong_data)
-
-
-class Pytaxon_NCBI(Pytaxon):
-    def compare_data(self, line, column_error, wrong_data, corrected_data, id_number) -> bool:
-        def append_ID_number():
-            self._incorrect_data['NCBI ID Source'].append(f'=HYPERLINK("https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id={id_number}", "{id_number}")')
-        super().compare_data(append_ID_number, line, column_error, wrong_data, corrected_data, id_number)
-
-    def create_to_correct_spreadsheet(self, spreadsheet_name):
-        self.source_id = ['NCBI ID Source']
-        super().create_to_correct_spreadsheet(spreadsheet_name)
-
-    def no_correspondence_data(self, line, column_error, wrong_data):
-        def append_ID_number():
-            self._incorrect_data['NCBI ID Source'].append('No Correspondence')
-        super().no_correspondence_data(append_ID_number, line, column_error, wrong_data)
-
-
-class Pytaxon_INAT(Pytaxon):
-    def compare_data(self, line, column_error, wrong_data, corrected_data, id_number) -> bool:
-        def append_ID_number():
-            self._incorrect_data['INAT ID Source'].append('No ID')
-        super().compare_data(append_ID_number, line, column_error, wrong_data, corrected_data, id_number)
-
-    def create_to_correct_spreadsheet(self, spreadsheet_name):
-        self.source_id = ['INAT ID Source']
-        super().create_to_correct_spreadsheet(spreadsheet_name)
-
-    def no_correspondence_data(self, line, column_error, wrong_data):
-        def append_ID_number():
-            self._incorrect_data['INAT ID Source'].append('No Correspondence')
-        super().no_correspondence_data(append_ID_number, line, column_error, wrong_data)
-
-
-class Pytaxon_COL(Pytaxon):
-    def compare_data(self, line, column_error, wrong_data, corrected_data, id_number) -> bool:
-        def append_ID_number():
-            self._incorrect_data['COL ID Source'].append(f'=HYPERLINK("https://www.checklistbank.org/dataset/278910/taxon/{id_number}", "{id_number}")')
-        super().compare_data(append_ID_number, line, column_error, wrong_data, corrected_data, id_number)
-
-    def create_to_correct_spreadsheet(self, spreadsheet_name):
-        self.source_id = ['COL ID Source']
-        super().create_to_correct_spreadsheet(spreadsheet_name)
-
-    def no_correspondence_data(self, line, column_error, wrong_data):
-        def append_ID_number():
-            self._incorrect_data['COL ID Source'].append('No Correspondence')
-        super().no_correspondence_data(append_ID_number, line, column_error, wrong_data)

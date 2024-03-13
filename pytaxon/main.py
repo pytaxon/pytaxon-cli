@@ -18,42 +18,16 @@ def main():
     parser.add_argument('-o', '--output', help='Name of checked spreadsheet')
     args = parser.parse_args()
 
-    match args.source_id:
-        case 1:
-            pt = Pytaxon_COL()
-            pt.read_spreadshet(args.input)
-            pt.read_columns(args.columns)
-            pt.check_species_and_lineage(1)
-            pt.create_to_correct_spreadsheet(args.to_check)
-
-        case 4:
-            pt = Pytaxon_NCBI()
-            pt.read_spreadshet(args.input)
-            pt.read_columns(args.columns)
-            pt.check_species_and_lineage(4)
-            pt.create_to_correct_spreadsheet(args.to_check)
-
-        case 11:
-            pt = Pytaxon_GBIF()
-            pt.read_spreadshet(args.input)
-            pt.read_columns(args.columns)
-            pt.check_species_and_lineage(11)
-            pt.create_to_correct_spreadsheet(args.to_check)
-
-        case 180:
-            pt = Pytaxon_INAT()
-            pt.read_spreadshet(args.input)
-            pt.read_columns(args.columns)
-            pt.check_species_and_lineage(180)
-            pt.create_to_correct_spreadsheet(args.to_check)
-
-        case _:
-            if args.original_spreadsheet and args.checked_spreadsheet:
-                pt = Pytaxon()
-                pt.update_original_spreadsheet(args.original_spreadsheet, args.checked_spreadsheet, args.output)
-            else:
-                print('Error')
-
+    if args.original_spreadsheet and args.checked_spreadsheet:
+        pt = Pytaxon()
+        pt.update_original_spreadsheet(args.original_spreadsheet, args.checked_spreadsheet, args.output)
+    else:
+        pt = Pytaxon(args.source_id)
+        pt.read_spreadshet(args.input)
+        pt.read_columns(args.columns)
+        pt.check_species_and_lineage()
+        pt.create_to_correct_spreadsheet(args.to_check)
+        
 
 if __name__ == '__main__':
     main()
