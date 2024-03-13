@@ -1,20 +1,19 @@
 import os
-import sys
-import re
+import subprocess
+from collections import Counter
+
 import customtkinter
 import customtkinter as ctk
-from tkinter import Tk, filedialog, ttk, Toplevel, Entry, Button
-import matplotlib.pyplot as plt
+from tkinter import filedialog, ttk, Toplevel, Entry, Button, Label
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
 from PIL import Image, ImageTk
-import subprocess
 from CTkMessagebox import CTkMessagebox
 from openpyxl import load_workbook
 from ttkthemes import ThemedTk
-from tkinter import Label
 import openpyxl
-from collections import Counter
 import pkg_resources
+
 
 def open_file(entry_widget):
     filetypes = [("Excel files", "*.xlsx"), ("CSV files", "*.csv"), ("All files", "*.*")]
@@ -23,9 +22,11 @@ def open_file(entry_widget):
         entry_widget.delete(0, ctk.END)
         entry_widget.insert(0, filepath)
 
+
 def clear_frame(frame):
     for widget in frame.winfo_children():
         widget.destroy()
+
 
 def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadsheet_entry):
     input_path = input_entry.get()
@@ -98,12 +99,14 @@ def run_pytaxon(input_path, source_id, check_spreadsheet_name):
         #CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
         textbox.insert('end', f"An unexpected error occurred: {e}\n")
 
+
 def show_id_info():
     CTkMessagebox(message="IDs Data Sources:\n"
                           "1 - Catalogue of Life Checklist\n"
                           "4 - NBCI\n"
                           "11 - GBIF\n"
                           "180 - iNaturalist Taxonomy", option_1="Ok")
+
 
 def load_spreadsheet(file_path, spreadsheet_name=""):
     try:
@@ -207,7 +210,6 @@ def extract_url(hyperlink_formula):
     return hyperlink_formula  # Retorna o valor original se não for um hiperlink
 
 
-
 def on_double_click(event, treeview, filepath):
     col_id = treeview.identify_column(event.x)
     col_name = treeview.heading(col_id, 'text')
@@ -276,6 +278,7 @@ def load_data_in_treeview(treeview, headers, data):
 
     for row_data in data:
         treeview.insert("", 'end', values=row_data)
+
 
 def calculate_statistics(entry_input, entry_spreadsheet_name, frame2):
     # Caminhos dos arquivos
@@ -490,7 +493,6 @@ def pytaxon_logo():
     #     return f'{os.getcwd()}/pytaxon/assets/pytaxon_logo.png'
     
 
-
 def create_layout():
     global tree2, textbox, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry, entry_columns, frame2,frame_a, frame_b, frame_c
 
@@ -646,4 +648,3 @@ def create_layout():
 
 
 create_layout()
-
