@@ -1,9 +1,6 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 import argparse
 
-from pytaxon import Pytaxon, Pytaxon_COL, Pytaxon_NCBI, Pytaxon_INAT, Pytaxon_GBIF
+from pytaxon import Pytaxon
 
 
 def main(): 
