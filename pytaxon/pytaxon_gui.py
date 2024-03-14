@@ -14,6 +14,8 @@ from ttkthemes import ThemedTk
 import openpyxl
 import pkg_resources
 
+from pytaxon import Pytaxon
+
 
 def open_file(entry_widget):
     filetypes = [("Excel files", "*.xlsx"), ("CSV files", "*.csv"), ("All files", "*.*")]
@@ -33,11 +35,9 @@ def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadshe
     check_spreadsheet_name = f"{spreadsheet_name_entry.get()}.xlsx"
     output_path = corrected_spreadsheet_entry.get()
 
-    # Configura os argumentos do comando de forma similar à função run_pytaxon
-    command = ["pytaxon", "-os", input_path, "-cs", check_spreadsheet_name, "-o", output_path]
-
     try:
-        subprocess.run(command, check=True)
+        pt = Pytaxon()
+        pt.update_original_spreadsheet(input_path, check_spreadsheet_name, output_path)
         #CTkMessagebox(message="Pytaxon correction has been run successfully.", icon="check", option_1="Ok")
         textbox.insert('end', "Pytaxon correction has been run successfully.\n")
 
@@ -70,10 +70,14 @@ def clear_treeviews():
 
 
 def run_pytaxon(input_path, source_id, check_spreadsheet_name):
+    source_id = int(source_id)
     columns = entry_columns.get()
-    command = ["pytaxon", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
     try:
-        subprocess.run(command, check=True)
+        pt = Pytaxon(source_id)
+        pt.read_spreadshet(input_path)
+        pt.read_columns(columns)
+        pt.check_species_and_lineage()
+        pt.create_to_correct_spreadsheet(check_spreadsheet_name)
 
         log_file_path = "spreadsheet_log.txt"
 
@@ -494,7 +498,7 @@ def pytaxon_logo():
     
 
 def create_layout():
-    global tree2, textbox, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry, entry_columns, frame2,frame_a, frame_b, frame_c
+    global tree2, textbox, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry, entry_columns, frame2, frame_a, frame_b, frame_c
 
     log_file_path = "spreadsheet_log.txt"
     if os.path.exists(log_file_path):
