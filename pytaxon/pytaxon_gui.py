@@ -258,7 +258,7 @@ def on_double_click(event, treeview, filepath):
     button.pack()
 
 
-def update_cell(sheet, row, col, new_value, item, treeview):
+def update_cell(col, new_value, item, treeview):
     # Obtém a lista atual de valores da linha selecionada no treeview
     values = list(treeview.item(item, 'values'))
 
@@ -443,7 +443,6 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
                                                      corner_radius=8)
     total_occurrences_label.pack(pady=(10, 0))  # pack com um padding vertical apenas na parte superior
 
-
     # Criar label para exibir o valor de total_occurrences
     total_occurrences_value_label = customtkinter.CTkLabel(master=parent_frame_a,
                                                            text=str(total_occurrences),
@@ -453,9 +452,6 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
     total_occurrences_value_label.pack(pady=(5, 10))  # pack com padding vertical na parte superior e inferior
     add_pie_chart(parent_frame_a, percentage_occurrences_with_error)
 
-
-
-
     # Criar label para "Total taxon names"
     taxon_count_label = customtkinter.CTkLabel(master=parent_frame_b,
                                                      text="Total Taxon Names",
@@ -463,8 +459,6 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
                                                      font=(None, 26),
                                                      corner_radius=8)
     taxon_count_label.pack(pady=(10, 0))  # pack com um padding vertical apenas na parte superior
-
-
 
     # Criar label para exibir o valor de Total taxon names:
     taxon_count_value_label = customtkinter.CTkLabel(master=parent_frame_b,
@@ -474,9 +468,6 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
                                                            corner_radius=8)
     taxon_count_value_label.pack(pady=(5, 10))  # pack com padding vertical na parte superior e inferior
     add_pie_chart(parent_frame_b, percentage_taxons_with_error)
-
-
-
 
     # Criar label para "Total taxon names"
     top_taxon_errors_label = customtkinter.CTkLabel(master=parent_frame_c,
