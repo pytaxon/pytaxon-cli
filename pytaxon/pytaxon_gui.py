@@ -69,7 +69,6 @@ def clear_treeviews():
 
 
 def run_pytaxon(input_path, source_id, check_spreadsheet_name):
-    source_id = int(source_id)
     columns = entry_columns.get()
     try:
         pt = Pytaxon(source_id)
@@ -97,7 +96,7 @@ def run_pytaxon(input_path, source_id, check_spreadsheet_name):
         calculate_statistics(input_path, check_spreadsheet_name, frame2)
     except subprocess.CalledProcessError as e:
         #CTkMessagebox(title="Error", message=f"An error occurred while running Pytaxon: {e}", icon="cancel")
-        textbox.insert('end', "An error occurred while running Pytaxon: {e}\n")
+        textbox.insert('end', f"An error occurred while running Pytaxon: {e}\n")
     except Exception as e:
         #CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
         textbox.insert('end', f"An unexpected error occurred: {e}\n")

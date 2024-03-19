@@ -9,7 +9,7 @@ import requests
 
 class Pytaxon:
     def __init__(self, source_id=None):
-        self._source_id:int = source_id
+        self._source_id:int = int(source_id)
 
         self._original_df:pd.DataFrame = None
 
