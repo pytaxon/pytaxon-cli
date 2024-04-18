@@ -33,7 +33,9 @@ class Pytaxon:
 \033[32m88              d8' \033[m
                          Taxonomy and Lineage Checker\n'''
 
-    def connect_to_api(self) -> None:        
+    def connect_to_api(self) -> None: 
+        """
+        """    
         if requests.get("http://resolver.globalnames.org/name_resolvers.json").status_code != 200:
             print(f"Could not connect to GNR api")
             exit()
@@ -42,6 +44,8 @@ class Pytaxon:
         time.sleep(1)
 
     def read_spreadshet(self, original_spreadsheet: str) -> pd.DataFrame:
+        """
+        """
         original_spreadsheet_path = original_spreadsheet.replace('"', '')
         original_spreadsheet = os.path.basename(original_spreadsheet_path)
         original_spreadsheet_name, _ = os.path.splitext(original_spreadsheet)
@@ -54,6 +58,8 @@ class Pytaxon:
         return self._original_df
     
     def read_columns(self, column_vars:list) -> None:
+        """
+        """
         self.column_vars = [column.strip() for column in column_vars.split(',')]
 
         missing_columns = [column for column in self.column_vars if column not in self._original_df.columns]
@@ -65,6 +71,8 @@ class Pytaxon:
             exit()
 
     def compare_data(self, line, column_error, wrong_data, corrected_data=None, id_number=None) -> tuple:
+        """
+        """
         def choose_id():
             id_links = {
                 1: ('COL ID Source', f'=HYPERLINK("https://www.checklistbank.org/dataset/278910/taxon/{id_number}", "{id_number}")'),
@@ -94,6 +102,8 @@ class Pytaxon:
             self._incorrect_data['Change'].append('No Correspondence')
 
     def verify_taxon(self, nome_taxon:str) -> dict:
+        """
+        """
         valid_ranks = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
         url = "http://resolver.globalnames.org/name_resolvers.json"
         params = {
@@ -115,7 +125,8 @@ class Pytaxon:
                 for i, rank in enumerate(ranks):
                     if rank in valid_ranks:
                         result[rank] = [paths[i], ids[i] if ids != [''] else 'No ID']
-                result['scientificName'] = [service['name_string'], service['taxon_id'] if service['taxon_id'] != [''] else 'No ID']
+                result['scientificName'] = [service['name_string'], service['taxon_id'] if \
+                                            service['taxon_id'] != [''] else 'No ID']
                     
                 for rank in valid_ranks:
                     if rank not in result:
@@ -124,6 +135,8 @@ class Pytaxon:
                 return result
 
     def check_species_and_lineage(self) -> None:
+        """
+        """
         for counter in tqdm(range(len(self._original_df))):
             choosen_taxon = self._original_df[self.column_vars[-1]][counter]
             if not choosen_taxon:
@@ -139,16 +152,26 @@ class Pytaxon:
                 self.compare_data(counter+2, 'Taxon Not Found', choosen_taxon)
                 continue
             
-            self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], lineage['kingdom'][0], lineage['kingdom'][1])  # kingdom
-            self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], lineage['phylum'][0], lineage['phylum'][1])  # phylum
-            self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], lineage['class'][0], lineage['class'][1])  # class
-            self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], lineage['order'][0], lineage['order'][1])  # order
-            self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], lineage['family'][0], lineage['family'][1])  # family
-            self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], lineage['genus'][0], lineage['genus'][1])  # genus
-            self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], lineage['species'][0], lineage['species'][1]) # species
-            self.compare_data(counter+2, self.column_vars[7], self._original_df[self.column_vars[7]][counter], lineage['scientificName'][0], lineage['scientificName'][1])  # scientificName
+            self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], 
+                              lineage['kingdom'][0], lineage['kingdom'][1])
+            self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], 
+                              lineage['phylum'][0], lineage['phylum'][1])
+            self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], 
+                              lineage['class'][0], lineage['class'][1])
+            self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], 
+                              lineage['order'][0], lineage['order'][1])
+            self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], 
+                              lineage['family'][0], lineage['family'][1])
+            self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], 
+                              lineage['genus'][0], lineage['genus'][1])
+            self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], 
+                              lineage['species'][0], lineage['species'][1])
+            self.compare_data(counter+2, self.column_vars[7], self._original_df[self.column_vars[7]][counter], 
+                              lineage['scientificName'][0], lineage['scientificName'][1])
 
     def create_to_correct_spreadsheet(self, spreadsheet_name:str) -> None:
+        """
+        """
         if self._incorrect_data:
             to_correct_df = pd.DataFrame(self._incorrect_data).style.map(
                 lambda x: 'color: blue; text-decoration: underline;',
@@ -164,6 +187,8 @@ class Pytaxon:
             print('log_message')
 
     def update_original_spreadsheet(self, original_spreadsheet:str, to_correct_spreadsheet:str, spreadsheet_name:str) -> None:
+        """
+        """
         original_data_df = self.read_spreadshet(original_spreadsheet)
         to_correct_df = self.read_spreadshet(to_correct_spreadsheet)
 
