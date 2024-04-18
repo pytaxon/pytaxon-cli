@@ -1,19 +1,17 @@
 import os
-import subprocess
 from collections import Counter
 
 import customtkinter
 import customtkinter as ctk
+from CTkMessagebox import CTkMessagebox
 from tkinter import filedialog, ttk, Toplevel, Entry, Button, Label
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from PIL import Image, ImageTk
-from CTkMessagebox import CTkMessagebox
+import openpyxl
+import subprocess
 from openpyxl import load_workbook
 from ttkthemes import ThemedTk
-import openpyxl
-
-from pytaxon import Pytaxon
 
 
 def open_file(entry_widget):
@@ -23,21 +21,20 @@ def open_file(entry_widget):
         entry_widget.delete(0, ctk.END)
         entry_widget.insert(0, filepath)
 
-
 def clear_frame(frame):
     for widget in frame.winfo_children():
         widget.destroy()
 
-
 def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadsheet_entry):
+    textbox.delete("1.0", "end")
     input_path = input_entry.get()
     check_spreadsheet_name = f"{spreadsheet_name_entry.get()}.xlsx"
     output_path = corrected_spreadsheet_entry.get()
 
+    command = ["pytaxon", "-os", input_path, "-cs", check_spreadsheet_name, "-o", output_path]
+
     try:
-        pt = Pytaxon()
-        pt.update_original_spreadsheet(input_path, check_spreadsheet_name, output_path)
-        #CTkMessagebox(message="Pytaxon correction has been run successfully.", icon="check", option_1="Ok")
+        subprocess.run(command, check=True)
         textbox.insert('end', "Pytaxon correction has been run successfully.\n")
 
         clear_treeviews()  # Limpa as visualizações após a execução bem-sucedida
@@ -53,29 +50,30 @@ def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadshe
         #CTkMessagebox(title="Error", message=f"An error occurred while running Pytaxon correction: {e}", icon="cancel")
         textbox.insert('end', f"An error occurred while running Pytaxon correction: {e}\n")
     except Exception as e:
-        #CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
         textbox.insert('end', f"An unexpected error occurred: {e}\n")
 
 
 # Adicione esta nova função para limpar os Treeviews
 def clear_treeviews():
-    global tree2
-    #for item in tree.get_children():
-     #   tree.delete(item)
-    for item in tree2.get_children():
-        tree2.delete(item)
-    #tree['columns'] = []
-    tree2['columns'] = []
-
+    global tree
+    for item in tree.get_children():
+        tree.delete(item)
+    tree['columns'] = []
 
 def run_pytaxon(input_path, source_id, check_spreadsheet_name):
+    conteudo_textbox = textbox.get("1.0", "end-1c")
+    if conteudo_textbox.strip():
+        clear_treeviews()
+        textbox.delete("1.0", "end")
+        clear_frame(frame_a)
+        clear_frame(frame_b)
+        clear_frame(frame_c)
+
     columns = entry_columns.get()
+
+    command = ["pytaxon", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
     try:
-        pt = Pytaxon(source_id)
-        pt.read_spreadshet(input_path)
-        pt.read_columns(columns)
-        pt.check_species_and_lineage()
-        pt.create_to_correct_spreadsheet(check_spreadsheet_name)
+        subprocess.run(command, check=True)
 
         log_file_path = "spreadsheet_log.txt"
 
@@ -84,21 +82,18 @@ def run_pytaxon(input_path, source_id, check_spreadsheet_name):
             with open(log_file_path, 'r') as file:
                 content = file.read().strip()
                 if content == 'No errors in spreadsheet':
-                    #CTkMessagebox(message="No errors in spreadsheet.", icon="check", option_1="Ok")
                     textbox.insert('end', "No errors in spreadsheet.\n")
                     os.remove(log_file_path)  # Apagar o arquivo de log
                     clear_treeviews()
                     return
 
-        #CTkMessagebox(message="Pytaxon has been run successfully.", icon="check", option_1="Ok")
         textbox.insert('end', "Pytaxon has been run successfully.\n")
-        load_spreadsheet(input_path, check_spreadsheet_name)
+        load_spreadsheet(input_path, check_spreadsheet_name, source_id)
         calculate_statistics(input_path, check_spreadsheet_name, frame2)
     except subprocess.CalledProcessError as e:
         #CTkMessagebox(title="Error", message=f"An error occurred while running Pytaxon: {e}", icon="cancel")
         textbox.insert('end', f"An error occurred while running Pytaxon: {e}\n")
     except Exception as e:
-        #CTkMessagebox(title="Error", message=f"An unexpected error occurred: {e}", icon="cancel")
         textbox.insert('end', f"An unexpected error occurred: {e}\n")
 
 
@@ -109,8 +104,7 @@ def show_id_info():
                           "11 - GBIF\n"
                           "180 - iNaturalist Taxonomy", option_1="Ok")
 
-
-def load_spreadsheet(file_path, spreadsheet_name=""):
+def load_spreadsheet(file_path, spreadsheet_name="", source_id=None):
     try:
         workbook = load_workbook(filename=file_path, data_only=True)
         sheet = workbook.active
@@ -120,66 +114,37 @@ def load_spreadsheet(file_path, spreadsheet_name=""):
         data = [[idx + 2] + [row[idx].value for idx, cell in enumerate(sheet[1]) if cell.value in headers[1:]]
                 for idx, row in enumerate(sheet.iter_rows(min_row=2))]
 
-        # Aqui você deve ter previamente definido a variável global 'tree'
-        #load_data_in_treeview(tree, headers, data)
 
-        if spreadsheet_name:
-            load_spreadsheet_additional(f"{spreadsheet_name}.xlsx", tree2)
+        if spreadsheet_name and source_id:
+            load_spreadsheet_additional(f"{spreadsheet_name}.xlsx", tree, source_id)
     except Exception as e:
         CTkMessagebox(title="Error", message=f"Erro ao carregar a planilha: {e}", icon="cancel")
 
     return sheet, file_path
 
 
-def load_spreadsheet_additional(file_path, treeview):
-    workbook_spreadsheet = load_workbook(filename=file_path, data_only=False)
-    sheet_spreadsheet = workbook_spreadsheet.active
-
-    # Encontrar o índice da coluna 'GBIF ID Source' a partir do cabeçalho da planilha
-    column_headers = [cell.value for cell in sheet_spreadsheet[1]]
-    gbif_col_index = None
-    for index, header in enumerate(column_headers):
-        if header == 'GBIF ID Source':
-            gbif_col_index = index
-            break
-
-    # Se a coluna 'GBIF ID Source' não foi encontrada, não podemos continuar
-    if gbif_col_index is None:
-        print("A coluna 'GBIF ID Source' não foi encontrada.")
-        return
-
-    # Definir as colunas para o treeview
-    treeview['columns'] = column_headers
-    treeview['show'] = 'headings'
-
-    # Configurar os cabeçalhos do treeview
-    for col in column_headers:
-        treeview.heading(col, text=col)
-        treeview.column(col, width=100, anchor='center')
-
-    # Inserir os dados no treeview
-    for row in sheet_spreadsheet.iter_rows(min_row=2, values_only=False):
-        row_data = [cell.value if cell.value else "" for cell in row]
-
-        # Verificar e extrair a URL na coluna 'GBIF ID Source', se aplicável
-        if row_data[gbif_col_index] and isinstance(row_data[gbif_col_index], str):
-            cell_value = row_data[gbif_col_index]
-            if cell_value.startswith('=HYPERLINK'):
-                url = extract_url(cell_value)
-                row_data[gbif_col_index] = url
-
-        # Inserir a linha de dados no treeview
-        treeview.insert('', 'end', values=row_data)
-
-
-def load_spreadsheet_additional(file_path, treeview):
+def load_spreadsheet_additional(file_path, treeview, source_id):
     workbook_spreadsheet = load_workbook(filename=file_path, data_only=False)
     sheet_spreadsheet = workbook_spreadsheet.active
 
     # Mapeia os cabeçalhos para seus índices
     headers = [cell.value for cell in sheet_spreadsheet[1]]
-    # Define as colunas que desejamos exibir no Treeview
-    desired_columns = ['Error Line', 'Rank', 'Wrong Name', 'Suggested Name', 'GBIF ID Source', 'Change']
+
+    # Define as colunas que desejamos exibir no Treeview baseadas na fonte de dados
+    if source_id == "1":  # Catalogue of Life Checklist
+        id_column = 'COL ID Source'
+    elif source_id == "4":  # NBCI
+        id_column = 'NCBI ID Source'
+    elif source_id == "11":  # GBIF
+        id_column = 'GBIF ID Source'
+    elif source_id == "180":  # iNaturalist Taxonomy
+        id_column = 'INAT ID Source'
+    else:
+        id_column = None
+
+    desired_columns = ['Error Line', 'Rank', 'Wrong Name', 'Suggested Name', id_column, 'Change'] if id_column else [
+        'Error Line', 'Rank', 'Wrong Name', 'Suggested Name', 'Change']
+
     treeview['columns'] = desired_columns
     treeview['show'] = 'headings'
 
@@ -191,11 +156,12 @@ def load_spreadsheet_additional(file_path, treeview):
     # Insere os dados nas colunas do treeview
     for row in sheet_spreadsheet.iter_rows(min_row=2):
         row_data = [(cell.value if cell.value is not None else "") for cell in row]
-        gbif_id_source_index = headers.index('GBIF ID Source') if 'GBIF ID Source' in headers else None
+        if id_column:
+            id_column_index = headers.index(id_column) if id_column in headers else None
 
-        # Se o índice for válido e a célula contiver uma fórmula de hiperlink
-        if gbif_id_source_index is not None and isinstance(row_data[gbif_id_source_index], str):
-            row_data[gbif_id_source_index] = extract_url(row_data[gbif_id_source_index])
+            # Se o índice for válido e a célula contiver uma fórmula de hiperlink
+            if id_column_index is not None and isinstance(row_data[id_column_index], str):
+                row_data[id_column_index] = extract_url(row_data[id_column_index])
 
         # Reduzir row_data para apenas as colunas desejadas
         row_data = [row_data[headers.index(col)] for col in desired_columns]
@@ -256,36 +222,10 @@ def on_double_click(event, treeview, filepath):
     button.pack()
 
 
-def update_cell(col, new_value, item, treeview):
-    # Obtém a lista atual de valores da linha selecionada no treeview
-    values = list(treeview.item(item, 'values'))
-
-    # Atualiza o valor na coluna específica
-    values[col - 1] = new_value  # col - 1 porque os índices de colunas começam em 1 no treeview, mas em 0 nas listas
-
-    # Retorna a lista de valores atualizados
-    return values
-
-
-def load_data_in_treeview(treeview, headers, data):
-    treeview['columns'] = headers
-    treeview['show'] = 'headings'
-
-    for header in headers:
-        treeview.heading(header, text=header)
-        treeview.column(header, width=120)
-
-    for row in treeview.get_children():
-        treeview.delete(row)
-
-    for row_data in data:
-        treeview.insert("", 'end', values=row_data)
-
-
 def calculate_statistics(entry_input, entry_spreadsheet_name, frame2):
     # Caminhos dos arquivos
-    user_spreadsheet_path = entry_input  # Assume that this is the path to the user's spreadsheet
-    check_spreadsheet_path = f"{entry_spreadsheet_name}.xlsx"  # Path to the check spreadsheet
+    user_spreadsheet_path = entry_input  # Caminho para a planilha do usuário
+    check_spreadsheet_path = f"{entry_spreadsheet_name}.xlsx"  # Caminho para a planilha de checagem
 
     # Abrindo as planilhas
     user_wb = openpyxl.load_workbook(user_spreadsheet_path)
@@ -296,41 +236,37 @@ def calculate_statistics(entry_input, entry_spreadsheet_name, frame2):
     check_sheet = check_wb.active
 
     # Lendo dados da planilha do usuário
-    user_data = []
-    for row in user_sheet.iter_rows(min_row=2, values_only=True):
-        user_data.append(row[:8])  # Adjust the slice according to your data structure
+    user_data = [row[:8] for row in user_sheet.iter_rows(min_row=2, values_only=True)]
 
     # Calculando a quantidade total de ocorrências
     total_occurrences = len(user_data)
+    taxon_count = sum(1 for occurrence in user_data for cell in occurrence if cell is not None)
 
     # Lendo dados da planilha Checagem
-    check_data = []
-    for row in check_sheet.iter_rows(min_row=2, values_only=True):
-        check_data.append(row[:6])  # Adjust the slice according to your data structure
+    check_data = [row[:6] for row in check_sheet.iter_rows(min_row=2, values_only=True)]
 
     # Calculando a quantidade de ocorrências com erro
-    unique_error_lines = set([row[0] for row in check_data])
+    unique_error_lines = set(row[0] for row in check_data)
     occurrences_with_error = len(unique_error_lines)
-    percentage_occurrences_with_error = (occurrences_with_error / total_occurrences) * 100
 
-    # Calculando a quantidade de táxons verificados
-    taxon_count = 0
-    for occurrence in user_data:
-        taxon_count += sum(1 for cell in occurrence if cell is not None)
+    # Verificação de divisão por zero
+    if total_occurrences > 0:
+        percentage_occurrences_with_error = (occurrences_with_error / total_occurrences) * 100
+    else:
+        percentage_occurrences_with_error = 0
 
-    # Calculando a porcentagem de táxons com erro
-    percentage_taxons_with_error = (occurrences_with_error / taxon_count) * 100
+    if taxon_count > 0:
+        percentage_taxons_with_error = (occurrences_with_error / taxon_count) * 100
+    else:
+        percentage_taxons_with_error = 0
 
     # Contando erros por táxon
-    taxon_errors = Counter()
-    for row in check_data:
-        wrong_name = row[2]  # Adjust the index to where the wrong name is in your data
-        taxon_errors[wrong_name] += 1
+    taxon_errors = Counter(row[2] for row in check_data)
 
     # Encontrando os táxons com mais erros
     top_taxon_errors = taxon_errors.most_common(3)
 
-    # Update the dashboard
+    # Atualizar o dashboard
     create_dashboard(frame_a, frame_b, frame_c, total_occurrences, percentage_occurrences_with_error, taxon_count, percentage_taxons_with_error, top_taxon_errors)
 
 
@@ -392,27 +328,26 @@ def add_bar_graph(frame, top_taxon_errors):
 
 
 def add_pie_chart(frame, errors_percentage):
+    # Certifique-se de que a porcentagem de erros está entre 0 e 100
+    errors_percentage = max(0, min(errors_percentage, 100))
+    no_errors_percentage = 100 - errors_percentage
+
     # Atualiza o frame para obter as dimensões corretas
     frame.update_idletasks()
-
-    # Dados para o gráfico de pizza
-    sizes = [errors_percentage, 100 - errors_percentage]
-    labels = ['Errors', 'No Errors']
-
-    # Cria a figura e o gráfico de pizza com o tamanho padrão
     frame_width = frame.winfo_width()
     frame_height = frame.winfo_height()
     figsize_width = frame_width / 100
     figsize_height = frame_height / 100
+
+    # Cria a figura e o gráfico de pizza com o tamanho padrão
     fig, ax = plt.subplots(figsize=(figsize_width, figsize_height))
-    ax.pie(sizes, labels=labels, startangle=140, textprops={'color': 'white'},
-           autopct=lambda p: '{:.2f}%'.format(p * sum(sizes) / 100))
+    ax.pie([errors_percentage, no_errors_percentage], labels=['Errors', 'No Errors'],
+           startangle=140, textprops={'color': 'white'},
+           autopct='%1.1f%%')
 
     # Define a cor de fundo do gráfico
     fig.set_facecolor('#004C70')
     ax.set_facecolor('#004C70')
-    fig.set_figwidth(8)
-    fig.set_figheight(8)
 
     # Adiciona o gráfico ao frame usando FigureCanvasTkAgg
     canvas = FigureCanvasTkAgg(fig, master=frame)
@@ -478,7 +413,7 @@ def create_dashboard(parent_frame_a, parent_frame_b, parent_frame_c, total_occur
 
 
 def create_layout():
-    global tree2, textbox, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry, entry_columns, frame2, frame_a, frame_b, frame_c
+    global tree, textbox, entry_input, entry_spreadsheet_name, corrected_spreadsheet_entry, entry_columns, frame2, frame_a, frame_b, frame_c
 
     log_file_path = "spreadsheet_log.txt"
     if os.path.exists(log_file_path):
@@ -598,7 +533,7 @@ def create_layout():
     frame_c = ctk.CTkFrame(master=frame2, corner_radius=10, fg_color=new_frame_color)
     frame_c.place(relx=spacing * 3 + 2 * frame_width, rely=rely_adjusted, relwidth=frame_width, relheight=frame_height)
 
-    # Aumentar a largura do tree2 em 20%
+    # Aumentar a largura do tree em 20%
     tree2_width_increase_factor = 1.09  # Aumentar a largura em 20%
 
     # Configuração do Treeview dentro de frame4
@@ -606,17 +541,17 @@ def create_layout():
     tree_frame4.place(relx=0.015, rely=0.1, relwidth=0.89 * tree2_width_increase_factor, relheight=0.7)
 
 
-    tree2 = ttk.Treeview(tree_frame4)
-    tree2.pack(side='left', fill='both', expand=True)
+    tree = ttk.Treeview(tree_frame4)
+    tree.pack(side='left', fill='both', expand=True)
 
-    scrollbar_vertical4 = ttk.Scrollbar(tree_frame4, orient='vertical', command=tree2.yview)
+    scrollbar_vertical4 = ttk.Scrollbar(tree_frame4, orient='vertical', command=tree.yview)
     scrollbar_vertical4.pack(side='right', fill='y')
 
-    scrollbar_horizontal4 = ttk.Scrollbar(tree_frame4, orient='horizontal', command=tree2.xview)
+    scrollbar_horizontal4 = ttk.Scrollbar(tree_frame4, orient='horizontal', command=tree.xview)
     scrollbar_horizontal4.pack(side='bottom', fill='x')
 
-    tree2.configure(yscrollcommand=scrollbar_vertical4.set, xscrollcommand=scrollbar_horizontal4.set)
-    tree2.bind('<Double-1>', lambda event: on_double_click(event, tree2, f"{entry_spreadsheet_name.get()}.xlsx"))
+    tree.configure(yscrollcommand=scrollbar_vertical4.set, xscrollcommand=scrollbar_horizontal4.set)
+    tree.bind('<Double-1>', lambda event: on_double_click(event, tree, f"{entry_spreadsheet_name.get()}.xlsx"))
 
 
     corrected_spreadsheet_label = ctk.CTkLabel(master=frame4, text="Corrected spreadsheet name:", fg_color=frame_color,
@@ -625,6 +560,10 @@ def create_layout():
 
     corrected_spreadsheet_entry = ctk.CTkEntry(master=frame4, fg_color="white")
     corrected_spreadsheet_entry.place(relx=0.45, rely=0.82, relwidth=0.50)
+
+    ignore_incertae_sedis_checkbox = ctk.CTkCheckBox(master=frame4, text="Ignore incertae sedis records",
+                                                     fg_color=frame_color, text_color='white')
+    ignore_incertae_sedis_checkbox.place(relx=0.11, rely=0.89)
 
     correct_button = ctk.CTkButton(master=frame4, text="Correct", fg_color="#004C70", hover_color="#0073A0",
                                    command=lambda: run_pytaxon_correct(entry_input, entry_spreadsheet_name,
