@@ -1,6 +1,7 @@
 import os
 import time
 from collections import defaultdict
+from pathlib import Path
 
 import pandas as pd
 from tqdm import tqdm
@@ -168,17 +169,37 @@ class Pytaxon:
                               lineage['species'][0], lineage['species'][1])
             self.compare_data(counter+2, self.column_vars[7], self._original_df[self.column_vars[7]][counter], 
                               lineage['scientificName'][0], lineage['scientificName'][1])
+            
+    def return_output_dir(self):
+        """
+        Cria, caso não exista, senão retorna o path da pasta Pytaxon-Output de cada sistema operacional
+        """
+        if os.name == 'nt':  # Windows
+            self.pasta_home = Path.home()
+        elif os.name == 'posix':  # Linux or macOS
+            self.pasta_home = Path.home()
+        else:
+            self.pasta_home = None
+            print("Sistema operacional não suportado.")
+
+        pytaxon_output_dir = self.pasta_home / 'Pytaxon-Output'
+        pytaxon_output_dir.mkdir(exist_ok=True)
+        return pytaxon_output_dir
 
     def create_to_correct_spreadsheet(self, spreadsheet_name:str) -> None:
         """
-        """
+        Cria a planilha de sugestão de correção
+        """       
         if self._incorrect_data:
             to_correct_df = pd.DataFrame(self._incorrect_data).style.map(
                 lambda x: 'color: blue; text-decoration: underline;',
                 subset=self._id_column_name,
             )
 
-            to_correct_df.to_excel(f'{spreadsheet_name}.xlsx')
+            to_correct_spreadsheet_path = self.return_output_dir() / f'{spreadsheet_name}.xlsx'
+            print('File created at: ', to_correct_spreadsheet_path)
+            to_correct_df.to_excel(to_correct_spreadsheet_path)
+            return to_correct_spreadsheet_path
         else:
             log_message = 'No errors in spreadsheet'
             print(log_message)
@@ -196,9 +217,12 @@ class Pytaxon:
             if row['Change'] == 'y':
                 original_data_df.at[row['Error Line']-2, row['Rank']] = row['Suggested Name']
         
-        self._corrected_spreadsheet = original_data_df.copy()
+        corrected_spreadsheet = original_data_df.copy()
 
         try:
-            self._corrected_spreadsheet.to_excel(f'{spreadsheet_name}.xlsx', index=False)
+            corrected_spreadsheet_path = self.return_output_dir() / f'{spreadsheet_name}.xlsx'
+            print('File created at: ', corrected_spreadsheet_path)
+            corrected_spreadsheet.to_excel(corrected_spreadsheet_path, index=False)
+            return corrected_spreadsheet_path
         except Exception as e:
             print('Error to update original spreadsheet: ', e)
