@@ -13,6 +13,8 @@ import subprocess
 from openpyxl import load_workbook
 from ttkthemes import ThemedTk
 
+from pytaxon import Pytaxon
+
 
 def open_file(entry_widget):
     filetypes = [("Excel files", "*.xlsx"), ("CSV files", "*.csv"), ("All files", "*.*")]
@@ -25,22 +27,17 @@ def clear_frame(frame):
     for widget in frame.winfo_children():
         widget.destroy()
 
-def run_pytaxon_correct(input_entry, spreadsheet_name_entry, corrected_spreadsheet_entry):
+def run_pytaxon_correct(input_entry, corrected_spreadsheet_entry):
     textbox.delete("1.0", "end")
-    input_path = input_entry.get()
-    check_spreadsheet_name = f"{spreadsheet_name_entry.get()}.xlsx"
-    output_path = corrected_spreadsheet_entry.get()
-
-    command = ["pytaxon", "-os", input_path, "-cs", check_spreadsheet_name, "-o", output_path]
 
     try:
-        subprocess.run(command, check=True)
+        pt.update_original_spreadsheet(input_entry, str(path_to_correct_spreadsheet), corrected_spreadsheet_entry)
         textbox.insert('end', "Pytaxon correction has been run successfully.\n")
 
         clear_treeviews()  # Limpa as visualizações após a execução bem-sucedida
 
         # Limpa o campo corrected_spreadsheet_entry após a execução bem-sucedida
-        corrected_spreadsheet_entry.delete(0, ctk.END)
+        # corrected_spreadsheet_entry.delete(0, ctk.END)
         clear_frame(frame_a)
         clear_frame(frame_b)
         clear_frame(frame_c)
@@ -71,9 +68,14 @@ def run_pytaxon(input_path, source_id, check_spreadsheet_name):
 
     columns = entry_columns.get()
 
-    command = ["pytaxon", "-i", input_path, "-r", columns, "-c", check_spreadsheet_name, "-si", source_id]
     try:
-        subprocess.run(command, check=True)
+        global pt 
+        pt = Pytaxon(source_id)
+        pt.read_spreadshet(input_path)
+        pt.read_columns(columns)
+        pt.check_species_and_lineage()
+        global path_to_correct_spreadsheet
+        path_to_correct_spreadsheet = pt.create_to_correct_spreadsheet(check_spreadsheet_name)
 
         log_file_path = "spreadsheet_log.txt"
 
@@ -88,8 +90,8 @@ def run_pytaxon(input_path, source_id, check_spreadsheet_name):
                     return
 
         textbox.insert('end', "Pytaxon has been run successfully.\n")
-        load_spreadsheet(input_path, check_spreadsheet_name, source_id)
-        calculate_statistics(input_path, check_spreadsheet_name, frame2)
+        load_spreadsheet(input_path, source_id)
+        calculate_statistics(input_path)
     except subprocess.CalledProcessError as e:
         #CTkMessagebox(title="Error", message=f"An error occurred while running Pytaxon: {e}", icon="cancel")
         textbox.insert('end', f"An error occurred while running Pytaxon: {e}\n")
@@ -104,7 +106,7 @@ def show_id_info():
                           "11 - GBIF\n"
                           "180 - iNaturalist Taxonomy", option_1="Ok")
 
-def load_spreadsheet(file_path, spreadsheet_name="", source_id=None):
+def load_spreadsheet(file_path, source_id=None):
     try:
         workbook = load_workbook(filename=file_path, data_only=True)
         sheet = workbook.active
@@ -115,8 +117,8 @@ def load_spreadsheet(file_path, spreadsheet_name="", source_id=None):
                 for idx, row in enumerate(sheet.iter_rows(min_row=2))]
 
 
-        if spreadsheet_name and source_id:
-            load_spreadsheet_additional(f"{spreadsheet_name}.xlsx", tree, source_id)
+        if path_to_correct_spreadsheet and source_id:
+            load_spreadsheet_additional(path_to_correct_spreadsheet, tree, source_id)
     except Exception as e:
         CTkMessagebox(title="Error", message=f"Erro ao carregar a planilha: {e}", icon="cancel")
 
@@ -222,14 +224,13 @@ def on_double_click(event, treeview, filepath):
     button.pack()
 
 
-def calculate_statistics(entry_input, entry_spreadsheet_name, frame2):
+def calculate_statistics(entry_input):
     # Caminhos dos arquivos
     user_spreadsheet_path = entry_input  # Caminho para a planilha do usuário
-    check_spreadsheet_path = f"{entry_spreadsheet_name}.xlsx"  # Caminho para a planilha de checagem
 
     # Abrindo as planilhas
     user_wb = openpyxl.load_workbook(user_spreadsheet_path)
-    check_wb = openpyxl.load_workbook(check_spreadsheet_path)
+    check_wb = openpyxl.load_workbook(path_to_correct_spreadsheet)
 
     # Selecionando as primeiras abas das planilhas
     user_sheet = user_wb.active
@@ -566,8 +567,7 @@ def create_layout():
     ignore_incertae_sedis_checkbox.place(relx=0.11, rely=0.89)
 
     correct_button = ctk.CTkButton(master=frame4, text="Correct", fg_color="#004C70", hover_color="#0073A0",
-                                   command=lambda: run_pytaxon_correct(entry_input, entry_spreadsheet_name,
-                                                                       corrected_spreadsheet_entry))
+                                   command=lambda: run_pytaxon_correct(entry_input.get(), corrected_spreadsheet_entry.get()))
     correct_button.place(relx=0.45, rely=0.90, relwidth=0.50)
 
     root.mainloop()
