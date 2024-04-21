@@ -1,0 +1,11 @@
+pandas
+openpyxl
+tqdm
+xlrd
+requests
+argparse
+ttkthemes
+tk
+matplotlib
+customtkinter
+CTkMessagebox

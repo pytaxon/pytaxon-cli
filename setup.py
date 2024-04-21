@@ -27,6 +27,6 @@ setup(
     },
     install_requires=['pandas', 'openpyxl', 'tqdm', 'xlrd', 'requests', 
                       'argparse', 'ttkthemes', 'tk', 'matplotlib', 'customtkinter', 
-                      'CTkMessagebox', 'setuptools'],
+                      'CTkMessagebox'],
     url='https://github.com/pytaxon-cli'
 )
