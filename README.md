@@ -1,5 +1,3 @@
-<img src="pytaxon/pytaxon_logo.png" height="200px">
-
 # Pytaxon: An open source research assistance application for identifying errors and correcting the taxonomic nomenclature of biodiversity species
 
 Pytaxon is a Python application that identifies and corrects the taxonomic nomenclature of biodiversity species in databases with the Global Names Resolver API.
