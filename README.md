@@ -1,4 +1,4 @@
-# A Python software package for identifying and correcting errors in the taxonomic data of biodiversity species
+# Pytaxon: A Python software package for identifying and correcting errors in the taxonomic data of biodiversity species
 
 Pytaxon is a Python application that identifies and corrects the taxonomic nomenclature of biodiversity species in databases with the Global Names Resolver API.
 
