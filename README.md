@@ -42,7 +42,7 @@ Explore the options for these commands with the `--help` flag.
 
 If you use the source code of Pytaxon in any form, please cite the following manuscript (we encorage citing Global Names Resolver as well):
 
-<future manuscript>
+_future manuscript_
 
 ## Acknowledgements
 
@@ -60,6 +60,7 @@ This research was supported  by Centro Universitário do Pará - CESUPA with the
 ## Authors
 
 Marco Aurélio Proença Neto
+
 Marcos Paulo Alves de Sousa
 
 
@@ -68,6 +69,9 @@ Marcos Paulo Alves de Sousa
 Dr. Marcos Paulo Alves de Sousa (Project leader)
 
 _Email: **msousa@museu-goeldi.br**_
+
 _Grupo de Estudos Temático em Computação Aplicada (GET-COM)_
+
 _Centro Universitário do Pará - CESUPA_
+
 _Av. Perimetral 1901. CEP 66077- 530. Belém, Pará, Brazil._
