@@ -22,6 +22,7 @@ To download the Pytaxon GUI .exe:
 | .rar | [Link](https://drive.google.com/file/d/1eTyPHLXGj11VH8MC0MMY8L8UH3aOcT16/view?usp=drive_link) | [Link](https://drive.google.com/file/d/1U1CxFBCMslfHMCgo52uZPVlwAShceqjh/view?usp=drive_link) | 
 
 
+If the message "Windows protected your PC" shows up, just click on "More info" and then "Run anyway".
 
 
 ## Workflow
