@@ -20,12 +20,15 @@ $ pip install pytaxon
 ```
 To download the Pytaxon GUI .exe: 
 
-|      | win                                                          | lin                                                          | mac  |
-| ---- | ------------------------------------------------------------ | ------------------------------------------------------------ | ---- |
-| .zip | [Link](https://drive.google.com/file/d/1iBMTVAKbo_06jj6vAG30D01a-HThPzgc/view?usp=drive_link) | [Link](https://drive.google.com/file/d/1m-Jh1CIADKo0OAKUkFiMzj3cehlyShz5/view?usp=drive_link) | Link |
-| .rar | [Link](https://drive.google.com/file/d/1eTyPHLXGj11VH8MC0MMY8L8UH3aOcT16/view?usp=drive_link) | [Link](https://drive.google.com/file/d/1U1CxFBCMslfHMCgo52uZPVlwAShceqjh/view?usp=drive_link) | Link |
+|      | win                                                          | lin                                                          |
+| ---- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| .zip | [Link](https://drive.google.com/file/d/1iBMTVAKbo_06jj6vAG30D01a-HThPzgc/view?usp=drive_link) | [Link](https://drive.google.com/file/d/1m-Jh1CIADKo0OAKUkFiMzj3cehlyShz5/view?usp=drive_link) |
+| .rar | [Link](https://drive.google.com/file/d/1eTyPHLXGj11VH8MC0MMY8L8UH3aOcT16/view?usp=drive_link) | [Link](https://drive.google.com/file/d/1U1CxFBCMslfHMCgo52uZPVlwAShceqjh/view?usp=drive_link) | 
 
 <br>
+
+If the message "Windows protected your PC" shows up, just click on "More info" and then "Run anyway".
+
 
 ## Workflow
 Firstly, you will want to check your spreadsheet for errors, then the program will return you and Excel file (.xlsx) containing all the incorrect data depending on the selected data source.
