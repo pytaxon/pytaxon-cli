@@ -1,4 +1,4 @@
-<p align="center"><img src="./pytaxon/pytaxon_logo.png"></p>
+<p align="center"><img src="./pytaxon/pytaxon_logo.png" width="320" height="230"></p>
 
 # Pytaxon: An open source research assistance application for identifying errors and correcting the taxonomic nomenclature of biodiversity species
 
