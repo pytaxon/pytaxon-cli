@@ -1,4 +1,4 @@
-<img src="pytaxon/pytaxon_logo.png" height="200px">
+<p align="center"><img src="./pytaxon/pytaxon_logo.png"></p>
 
 # Pytaxon: An open source research assistance application for identifying errors and correcting the taxonomic nomenclature of biodiversity species
 
@@ -7,6 +7,8 @@ Pytaxon is a Python application that identifies and corrects the taxonomic nomen
 Although the Global Names Resolver API is robust and well-established, it lacks the possibility to automatize the checking process inside the researcher spredsheet itself, which can be quite challenging for scientists researchers without some training in computing.
 
 For these problematics, we came with Pytaxon.
+
+<br>
 
 ## Installation Guide
 ### Dependencies
@@ -23,8 +25,7 @@ To download the Pytaxon GUI .exe:
 | .zip | [Link](https://drive.google.com/file/d/1iBMTVAKbo_06jj6vAG30D01a-HThPzgc/view?usp=drive_link) | [Link](https://drive.google.com/file/d/1m-Jh1CIADKo0OAKUkFiMzj3cehlyShz5/view?usp=drive_link) | Link |
 | .rar | [Link](https://drive.google.com/file/d/1eTyPHLXGj11VH8MC0MMY8L8UH3aOcT16/view?usp=drive_link) | [Link](https://drive.google.com/file/d/1U1CxFBCMslfHMCgo52uZPVlwAShceqjh/view?usp=drive_link) | Link |
 
-
-
+<br>
 
 ## Workflow
 Firstly, you will want to check your spreadsheet for errors, then the program will return you and Excel file (.xlsx) containing all the incorrect data depending on the selected data source.
@@ -38,11 +39,31 @@ $ pytaxon -os <path to original spreadsheet> -cs <path of checked spreadsheet> -
 ```
 Explore the options for these commands with the `--help` flag.
 
+<br>
+
+## Illustrative Examples
+
+<p align="center"><img src="./assets/cli.png"></p>
+
+Pytaxon CLI running on the Visual Studio Code terminal (Powershell) with a modified version of the Opiliones dataset
+
+<p align="center"><img src="./assets/spreadsheet.png"></p>
+
+The to correct spreadsheet of the modified Opiliones dataset
+
+<p align="center"><img src="./assets/gui.png"></p>
+
+Pytaxon GUI application running with a modified version of the Uropygi dataset
+
+<br>
+
 ## Citing
 
 If you use the source code of Pytaxon in any form, please cite the following manuscript (we encorage citing Global Names Resolver as well):
 
 _future manuscript_
+
+<br>
 
 ## Acknowledgements
 
@@ -52,10 +73,13 @@ Museu Paraense Emílio Goeldi (MPEG)
 
 Centro Universitário do Estado do Pará (CESUPA)
 
+<br>
+
 ## Funding
 
 This research was supported  by Centro Universitário do Pará - CESUPA with the PIBICT scientific initiation scholarship project.
 
+<br>
 
 ## Authors
 
@@ -63,8 +87,9 @@ Marco Aurélio Proença Neto
 
 Marcos Paulo Alves de Sousa
 
+<br>
 
- ## Contact
+## Contact
 
 Dr. Marcos Paulo Alves de Sousa (Project leader)
 
