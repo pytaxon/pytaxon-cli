@@ -87,7 +87,9 @@ class Pytaxon:
         self._id_column_name, id_hyperlink = choose_id()
 
         try:
-            if corrected_data != wrong_data:
+            if self.ignore_incertae_sedis and wrong_data == 'incertae sedis':
+                pass
+            elif corrected_data != wrong_data:
                 self._incorrect_data['Error Line'].append(line)
                 self._incorrect_data['Rank'].append(column_error)
                 self._incorrect_data['Wrong Name'].append(wrong_data)
@@ -135,9 +137,11 @@ class Pytaxon:
 
                 return result
 
-    def check_species_and_lineage(self) -> None:
+    def check_species_and_lineage(self, ignore_incertae_sedis:bool=False) -> None:
         """
         """
+        self.ignore_incertae_sedis = ignore_incertae_sedis
+
         for counter in tqdm(range(len(self._original_df))):
             choosen_taxon = self._original_df[self.column_vars[-1]][counter]
             if not choosen_taxon:

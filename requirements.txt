@@ -9,3 +9,4 @@ tk
 matplotlib
 customtkinter
 CTkMessagebox
+pyinstaller
