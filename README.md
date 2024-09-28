@@ -39,15 +39,15 @@ Explore the options for these commands with the `--help` flag.
 
 ## Illustrative Examples
 
-<p align="center"><img src="./assets/cli.png"></p>
+<p align="center"><img src="./assets/image1.png"></p>
 
-Pytaxon CLI running on the Visual Studio Code terminal (Powershell) with a modified version of the Opiliones dataset
+Pytaxon CLI running on the Visual Studio Code terminal (Powershell) with a modified version of the Uropygi dataset
 
-<p align="center"><img src="./assets/spreadsheet.png"></p>
+<p align="center"><img src="./assets/image2.png"></p>
 
-The to correct spreadsheet of the modified Opiliones dataset
+The to correct spreadsheet of the modified Uropygi dataset
 
-<p align="center"><img src="./assets/gui.png"></p>
+<p align="center"><img src="./assets/image3.png"></p>
 
 Pytaxon GUI application running with a modified version of the Uropygi dataset
 
