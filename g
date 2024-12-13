@@ -1,0 +1,1 @@
+pytaxon -r "kingdom, phylum, class, order, family, genus, species, scientificName" -i "C:\Users\marco.proenca\OneDrive - Deltamaq\Área de Trabalho\pytaxon-cli\Uropygi_test_spreadsheet.xlsx" -c 'colPlanilha' -si 11

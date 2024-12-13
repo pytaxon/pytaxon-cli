@@ -1,47 +1,56 @@
 import requests
+from pprint import pprint
 
-def verificar_nomes_post(nomes_cientificos, data_sources="1|12", all_matches=False):
-    url = "https://verifier.globalnames.org/api/v1/verifications"
-    
-    payload = {
-        "nameStrings": [
-            "Pomatomus soltator",
-            "Bubo bubo (Linnaeus, 1758)",
-            "Isoetes longissimum"
-        ],
-        "dataSources": [
-            1,
-            12,
-            170
-        ],
-        "withAllMatches": False,
-        "withCapitalization": False,
-        "withSpeciesGroup": False,
-        "withUninomialFuzzyMatch": False,
-        "withStats": True,
-        "mainTaxonThreshold": 0.6
-        }
-    
-    headers = {
-        "Content-Type": "application/json"
+url = "https://verifier.globalnames.org/api/v1/verifications"
+valid_ranks = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
+
+payload = {
+    "nameStrings": [
+        'Homo sapiensis'
+    ],
+    "dataSources": [
+        1
+    ],
+    "withAllMatches": False,
+    "withCapitalization": False,
+    "withSpeciesGroup": False,
+    "withUninomialFuzzyMatch": False,
+    "withStats": True,
+    "mainTaxonThreshold": 0.6
     }
-    
-    try:
-        response = requests.post(url, json=payload, headers=headers)
-        response.raise_for_status()
-        return response.json()
-    
-    except requests.RequestException as e:
-        print(f"Erro ao acessar a API: {e}")
-        return None
 
-nomes = ["Pomatomus saltator", "Bubo bubo", "Isoetes longissimum"]
-resultado = verificar_nomes_post(nomes)
+headers = {
+    "Content-Type": "application/json"
+}
 
-if resultado:
-    print("Resultados da verificação:")
-    for nome, dados in zip(nomes, resultado.get("names", [])):
-        print(f"\nNome: {nome}")
-        print(f"Detalhes: {dados}")
-else:
-    print("Não foi possível verificar os nomes.")
+try:
+    response = requests.post(url, json=payload, headers=headers)
+    response.raise_for_status()
+    # print(response.json())
+
+except requests.RequestException as e:
+    print(f"Erro ao acessar a API: {e}")
+    print(None)
+
+# nomes = ["Pomatomus saltator", "Bubo bubo", "Isoetes longissimum"]
+# resultado = verificar_nomes_post(nomes)
+
+if response.status_code == 200:
+    data = response.json()
+    service = data['names'][0]['bestResult']
+    paths = service['classificationPath'].split('|')
+    ids = service['classificationIds'].split('|')
+    ranks = service['classificationRanks'].split('|')
+
+    result = {}
+    for i, rank in enumerate(ranks):
+        if rank in valid_ranks:
+            result[rank] = [paths[i], ids[i] if ids != [''] else 'No ID']
+    result['scientificName'] = [service['matchedCanonicalSimple'], service['recordId'] if \
+                                service['recordId'] != [''] else 'No ID']
+        
+    for rank in valid_ranks:
+        if rank not in result:
+            result[rank] = ['', '']
+
+    pprint(result)
