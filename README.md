@@ -1,4 +1,5 @@
 ![](https://raw.githubusercontent.com/pytaxon/pytaxon-cli/main/pytaxon/pytaxon_logo.png)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14457929.svg)](https://doi.org/10.5281/zenodo.14457929)
 
 # Pytaxon: A Python software package for the identification and correction of errors in the taxonomic data of biodiversity species
 
