@@ -1,4 +1,4 @@
-<p align="center"><img src="./pytaxon/pytaxon_logo.png" width="320" height="230"></p>
+![](https://raw.githubusercontent.com/pytaxon/pytaxon-cli/main/pytaxon/pytaxon_logo.png)
 
 # Pytaxon: A Python software package for the identification and correction of errors in the taxonomic data of biodiversity species
 
@@ -39,15 +39,16 @@ Explore the options for these commands with the `--help` flag.
 
 ## Illustrative Examples
 
-<p align="center"><img src="./assets/image1.png"></p>
+![CLI](https://raw.githubusercontent.com/pytaxon/pytaxon-cli/main/assets/image1.png)
 
 Pytaxon CLI running on the Visual Studio Code terminal (Powershell) with a modified version of the Uropygi dataset
 
-<p align="center"><img src="./assets/image2.png"></p>
+![](https://raw.githubusercontent.com/pytaxon/pytaxon-cli/main/assets/image2.png)
+
 
 The to correct spreadsheet of the modified Uropygi dataset
 
-<p align="center"><img src="./assets/image3.png"></p>
+![](https://raw.githubusercontent.com/pytaxon/pytaxon-cli/main/assets/image3.png)
 
 Pytaxon GUI application running with a modified version of the Uropygi dataset
 
