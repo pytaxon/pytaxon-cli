@@ -35,23 +35,23 @@ class Pytaxon:
                          Taxonomy and Lineage Checker\n'''
 
     def connect_to_api(self) -> None: 
-        """
-        """    
-        if requests.get("http://resolver.globalnames.org/name_resolvers.json").status_code != 200:
+        if requests.post("https://verifier.globalnames.org/api/v1/verifications").status_code != 200:
             print(f"Could not connect to GNR api")
             exit()
         else:
-            print(f"Connected to GNR api")
+            print(f"Connected to Global Names Verifier API")
         time.sleep(1)
 
     def read_spreadshet(self, original_spreadsheet: str) -> pd.DataFrame:
-        """
-        """
-        original_spreadsheet_path = original_spreadsheet.replace('"', '')
-        original_spreadsheet = os.path.basename(original_spreadsheet_path)
-        original_spreadsheet_name, _ = os.path.splitext(original_spreadsheet)
+        original_spreadsheet = os.path.basename(original_spreadsheet)
+        original_spreadsheet_name, file_extension  = os.path.splitext(original_spreadsheet)
 
-        self._original_df = pd.read_excel(original_spreadsheet_path).fillna('')
+        if file_extension == '.csv':
+            self._original_df = pd.read_csv(original_spreadsheet).fillna('')
+        elif file_extension in ['.xlsx', '.xls']:
+            self._original_df = pd.read_excel(original_spreadsheet).fillna('')
+        else:
+            raise ValueError(f"Tipo de arquivo '{file_extension}' não suportado. Use .csv, .xlsx ou .xls.")
 
         print(f'Spreadsheet {original_spreadsheet_name} read.')
         time.sleep(1)
@@ -59,11 +59,9 @@ class Pytaxon:
         return self._original_df
     
     def read_columns(self, column_vars:list) -> None:
-        """
-        """
         self.column_vars = [column.strip() for column in column_vars.split(',')]
 
-        missing_columns = [column for column in self.column_vars if column not in self._original_df.columns]
+        missing_columns = [column for column in self.column_vars if column not in self._original_df.columns and column not in 'xX']
 
         if not missing_columns:
             print('Columns choosed.')
@@ -72,11 +70,9 @@ class Pytaxon:
             exit()
 
     def compare_data(self, line, column_error, wrong_data, corrected_data=None, id_number=None) -> tuple:
-        """
-        """
         def choose_id():
             id_links = {
-                1: ('COL ID Source', f'=HYPERLINK("https://www.checklistbank.org/dataset/278910/taxon/{id_number}", "{id_number}")'),
+                1: ('COL ID Source', f'=HYPERLINK("https://www.catalogueoflife.org/data/taxon/{id_number}", "{id_number}")'),
                 4: ('NCBI ID Source', f'=HYPERLINK("https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id={id_number}", "{id_number}")'), 
                 11: ('GBIF ID Source', f'=HYPERLINK("https://www.gbif.org/species/{id_number}", "{id_number}")'),
                 180: ('INAT ID Source', f'=HYPERLINK("https://www.inaturalist.org/taxa/{id_number}, {id_number}")')
@@ -103,43 +99,59 @@ class Pytaxon:
             self._incorrect_data['Suggested Name'].append('No Correspondence')
             self._incorrect_data[self._id_column_name].append('No ID')
             self._incorrect_data['Change'].append('No Correspondence')
+        
 
     def verify_taxon(self, nome_taxon:str) -> dict:
-        """
-        """
+        url = "https://verifier.globalnames.org/api/v1/verifications"
         valid_ranks = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
-        url = "http://resolver.globalnames.org/name_resolvers.json"
-        params = {
-            'names': nome_taxon,
-            'best_match_only': True,
-            'data_source_ids': self._source_id,
+
+        payload = {
+            "nameStrings": [
+                nome_taxon
+            ],
+            "dataSources": [
+                self._source_id
+            ],
+            "withAllMatches": False,
+            "withCapitalization": False,
+            "withSpeciesGroup": False,
+            "withUninomialFuzzyMatch": False,
+            "withStats": True,
+            "mainTaxonThreshold": 0.6
+            }
+
+        headers = {
+            "Content-Type": "application/json"
         }
-        response = requests.get(url, params=params)
+
+        try:
+            response = requests.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            print(f"Erro ao acessar a API: {e}")
+            print(None)
 
         if response.status_code == 200:
             data = response.json()
-            service = data['data'][0]['results'][0]
-            if 'data' in data and data['data']:
-                paths = service['classification_path'].split('|')
-                ids = service['classification_path_ids'].split('|')
-                ranks = service['classification_path_ranks'].split('|')
+            service = data['names'][0]['bestResult']
+            paths = service['classificationPath'].split('|')
+            ids = service['classificationIds'].split('|')
+            ranks = service['classificationRanks'].split('|')
 
-                result = {}
-                for i, rank in enumerate(ranks):
-                    if rank in valid_ranks:
-                        result[rank] = [paths[i], ids[i] if ids != [''] else 'No ID']
-                result['scientificName'] = [service['name_string'], service['taxon_id'] if \
-                                            service['taxon_id'] != [''] else 'No ID']
-                    
-                for rank in valid_ranks:
-                    if rank not in result:
-                        result[rank] = ['', '']
+            result = {}
+            for i, rank in enumerate(ranks):
+                if rank in valid_ranks:
+                    result[rank] = [paths[i], ids[i] if ids != [''] else 'No ID']
+            result['scientificName'] = [service['currentName'], service['recordId'] if \
+                                        service['recordId'] != [''] else 'No ID']
+                
+            for rank in valid_ranks:
+                if rank not in result:
+                    result[rank] = ['', '']
 
-                return result
+            return result
 
     def check_species_and_lineage(self, ignore_incertae_sedis:bool=False) -> None:
-        """
-        """
         self.ignore_incertae_sedis = ignore_incertae_sedis
 
         for counter in tqdm(range(len(self._original_df))):
@@ -157,22 +169,46 @@ class Pytaxon:
                 self.compare_data(counter+2, 'Taxon Not Found', choosen_taxon)
                 continue
             
-            self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], 
-                              lineage['kingdom'][0], lineage['kingdom'][1])
-            self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], 
+            try:
+                self.compare_data(counter+2, self.column_vars[0], self._original_df[self.column_vars[0]][counter], 
+                                  lineage['kingdom'][0], lineage['kingdom'][1])
+            except KeyError:
+                pass
+            try:
+                self.compare_data(counter+2, self.column_vars[1], self._original_df[self.column_vars[1]][counter], 
                               lineage['phylum'][0], lineage['phylum'][1])
-            self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], 
+            except KeyError:
+                pass                  
+            try:
+                self.compare_data(counter+2, self.column_vars[2], self._original_df[self.column_vars[2]][counter], 
                               lineage['class'][0], lineage['class'][1])
-            self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], 
+            except KeyError:
+                pass                  
+            try:
+                self.compare_data(counter+2, self.column_vars[3], self._original_df[self.column_vars[3]][counter], 
                               lineage['order'][0], lineage['order'][1])
-            self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], 
+            except KeyError:
+                pass                  
+            try:
+                self.compare_data(counter+2, self.column_vars[4], self._original_df[self.column_vars[4]][counter], 
                               lineage['family'][0], lineage['family'][1])
-            self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], 
+            except KeyError:
+                pass                  
+            try:
+                self.compare_data(counter+2, self.column_vars[5], self._original_df[self.column_vars[5]][counter], 
                               lineage['genus'][0], lineage['genus'][1])
-            self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], 
+            except KeyError:
+                pass                  
+            try:
+                self.compare_data(counter+2, self.column_vars[6], self._original_df[self.column_vars[6]][counter], 
                               lineage['species'][0], lineage['species'][1])
-            self.compare_data(counter+2, self.column_vars[7], self._original_df[self.column_vars[7]][counter], 
+            except KeyError:
+                pass                  
+            try:
+                self.compare_data(counter+2, self.column_vars[7], self._original_df[self.column_vars[7]][counter], 
                               lineage['scientificName'][0], lineage['scientificName'][1])
+            except KeyError:
+                pass                  
             
     def return_output_dir(self):
         """
