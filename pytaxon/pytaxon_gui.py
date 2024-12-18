@@ -450,14 +450,16 @@ def create_layout():
 
     label_columns = ctk.CTkLabel(master=frame1, text="Column Names", fg_color=frame_color, text_color='white')
     label_columns.place(relx=0.05, rely=0.3)
+    default_value = ctk.StringVar(value="kingdom,phylum,class,order,family,genus,species,scientificName")
     entry_columns = ctk.CTkEntry(master=frame1,
+                                 textvariable=default_value,
                                  placeholder_text="kingdom,phylum,class,order,family,genus,species,scientificName",
                                  fg_color="white")
     entry_columns.place(relx=0.05, rely=0.4, relwidth=0.9)
 
     label_source_id = ctk.CTkLabel(master=frame1, text="Source ID", fg_color=frame_color, text_color='white')
     label_source_id.place(relx=0.05, rely=0.5)
-    option_menu_source_id = ctk.CTkOptionMenu(master=frame1, values=["1", "4", "11", "180"], fg_color="white")
+    option_menu_source_id = ctk.CTkOptionMenu(master=frame1, values=["1", "4", "11", "180"], fg_color="white", text_color='black')
     option_menu_source_id.place(relx=0.05, rely=0.6, relwidth=0.75)
 
     button_id_info = ctk.CTkButton(master=frame1, text="ID ?", fg_color="#004C70", hover_color="#0073A0",
