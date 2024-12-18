@@ -10,7 +10,7 @@ import requests
 
 class Pytaxon:
     def __init__(self, source_id=None):
-        self._source_id:int = int(source_id)
+        self._source_id:int = source_id
 
         self._original_df:pd.DataFrame = None
 
@@ -31,12 +31,11 @@ class Pytaxon:
 \033[32m88b,   ,a8"    `8b,d8'  \033[m\033[33m    88,    88,    ,88   ,d8" "8b,  "8a,   ,a8"  88       88\033[m  
 \033[32m88`YbbdP"'       Y88'   \033[m\033[33m    "Y888  `"8bbdP"Y8  8P'     `Y8  `"YbbdP"'   88       88\033[m  
 \033[32m88               d8'    \033[m                                                             
-\033[32m88              d8' \033[m
-                         Taxonomy and Lineage Checker\n'''
+\033[32m88              d8' \033[m \n'''
 
     def connect_to_api(self) -> None: 
         if requests.post("https://verifier.globalnames.org/api/v1/verifications").status_code != 200:
-            print(f"Could not connect to GNR api")
+            print(f"Could not connect to Global Names Verifier api")
             exit()
         else:
             print(f"Connected to Global Names Verifier API")
@@ -248,8 +247,6 @@ class Pytaxon:
             print('log_message')
 
     def update_original_spreadsheet(self, original_spreadsheet:str, to_correct_spreadsheet:str, spreadsheet_name:str) -> None:
-        """
-        """
         original_data_df = self.read_spreadshet(original_spreadsheet)
         to_correct_df = self.read_spreadshet(to_correct_spreadsheet)
 
