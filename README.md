@@ -49,9 +49,13 @@ Pytaxon CLI running on the Visual Studio Code terminal (Powershell) with a modif
 
 The to correct spreadsheet of the modified Uropygi dataset
 
-![](https://raw.githubusercontent.com/pytaxon/pytaxon-cli/main/assets/image3.png)
+![](https://raw.githubusercontent.com/pytaxon/pytaxon-cli/main/assets/image4.png)
 
 Pytaxon GUI application running with a modified version of the Uropygi dataset
+
+![](https://raw.githubusercontent.com/pytaxon/pytaxon-cli/main/assets/image3.png)
+
+Pytaxon1's CLI and GUI workflow
 
 <br>
 
