@@ -466,7 +466,7 @@ def create_layout():
                                    command=show_id_info)
     button_id_info.place(relx=0.84, rely=0.59, relwidth=0.12, relheight=0.09)
 
-    label_check_spreadsheet = ctk.CTkLabel(master=frame1, text="Check Spreadsheet Name", fg_color=frame_color,
+    label_check_spreadsheet = ctk.CTkLabel(master=frame1, text="Suggestion Spreadsheet Name", fg_color=frame_color,
                                            text_color='white')
     label_check_spreadsheet.place(relx=0.05, rely=0.7)
 
@@ -507,7 +507,7 @@ def create_layout():
     frame4 = ctk.CTkFrame(master=root, corner_radius=10, fg_color=frame_color)
     frame4.place(relx=new_relx_frame4, rely=0.44, relwidth=new_relwidth_frame4, relheight=0.51)
 
-    label_check_spreadsheet = Label(master=root, text="Check Spreadsheet", bg=frame_color, fg='white')
+    label_check_spreadsheet = Label(master=root, text="Suggestion Spreadsheet", bg=frame_color, fg='white')
     label_check_spreadsheet.place(relx=0.50, rely=0.45)
 
     # Definição da cor para os novos frames A, B, C
