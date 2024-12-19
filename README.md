@@ -19,8 +19,8 @@ To download the Pytaxon GUI .exe:
 
 |      | win                                                          | lin                                                          |
 | ---- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| .zip | [Link](https://drive.google.com/file/d/1iBMTVAKbo_06jj6vAG30D01a-HThPzgc/view?usp=drive_link) | [Link](https://drive.google.com/file/d/1m-Jh1CIADKo0OAKUkFiMzj3cehlyShz5/view?usp=drive_link) |
-| .rar | [Link](https://drive.google.com/file/d/1eTyPHLXGj11VH8MC0MMY8L8UH3aOcT16/view?usp=drive_link) | [Link](https://drive.google.com/file/d/1U1CxFBCMslfHMCgo52uZPVlwAShceqjh/view?usp=drive_link) |
+| .zip | [Link](https://drive.google.com/file/d/1TBxId32jCaKABDWoAVJbjG18jnMMvzqy/view?usp=sharing) | [Link](https://drive.google.com/file/d/1m-Jh1CIADKo0OAKUkFiMzj3cehlyShz5/view?usp=drive_link) |
+| .rar | [Link](https://drive.google.com/file/d/1y8EONhv_nPQ7bSE1CeGTRcDFGa2BttkL/view?usp=sharing) | [Link](https://drive.google.com/file/d/1U1CxFBCMslfHMCgo52uZPVlwAShceqjh/view?usp=drive_link) |
 
 <br>
 
