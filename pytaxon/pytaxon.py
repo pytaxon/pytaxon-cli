@@ -10,7 +10,7 @@ import requests
 
 class Pytaxon:
     def __init__(self, source_id=None):
-        self._source_id:int = source_id
+        self._source_id:int = int(source_id)
 
         self._original_df:pd.DataFrame = None
 
@@ -42,8 +42,8 @@ class Pytaxon:
         time.sleep(1)
 
     def read_spreadshet(self, original_spreadsheet: str) -> pd.DataFrame:
-        original_spreadsheet = os.path.basename(original_spreadsheet)
-        original_spreadsheet_name, file_extension  = os.path.splitext(original_spreadsheet)
+        os_name_extension = os.path.basename(original_spreadsheet)
+        original_spreadsheet_name, file_extension  = os.path.splitext(os_name_extension)
 
         if file_extension == '.csv':
             self._original_df = pd.read_csv(original_spreadsheet).fillna('')
