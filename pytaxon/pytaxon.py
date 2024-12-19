@@ -114,7 +114,7 @@ class Pytaxon:
             "withAllMatches": False,
             "withCapitalization": False,
             "withSpeciesGroup": False,
-            "withUninomialFuzzyMatch": False,
+            "withUninomialFuzzyMatch": True,
             "withStats": True,
             "mainTaxonThreshold": 0.6
             }
