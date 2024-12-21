@@ -54,7 +54,7 @@ Pytaxon GUI application running with a modified version of the Uropygi dataset
 
 ![](https://raw.githubusercontent.com/pytaxon/pytaxon-cli/main/assets/image3.png)
 
-Pytaxon1's CLI and GUI workflow
+Pytaxon's CLI and GUI workflow
 
 <br>
 
