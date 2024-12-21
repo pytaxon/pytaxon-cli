@@ -1,0 +1,8 @@
+{
+    "withAllMatches": false,
+    "withCapitalization": false,
+    "withSpeciesGroup": false,
+    "withUninomialFuzzyMatch": true,
+    "withStats": true,
+    "mainTaxonThreshold": 0.6
+  }

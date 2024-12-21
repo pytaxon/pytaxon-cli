@@ -2,6 +2,7 @@ import os
 import time
 from collections import defaultdict
 from pathlib import Path
+import json
 
 import pandas as pd
 from tqdm import tqdm
@@ -104,23 +105,21 @@ class Pytaxon:
         url = "https://verifier.globalnames.org/api/v1/verifications"
         valid_ranks = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species']
 
-        payload = {
-            "nameStrings": [
-                nome_taxon
-            ],
-            "dataSources": [
-                self._source_id
-            ],
-            "withAllMatches": False,
-            "withCapitalization": False,
-            "withSpeciesGroup": False,
-            "withUninomialFuzzyMatch": True,
-            "withStats": True,
-            "mainTaxonThreshold": 0.6
-            }
-
         headers = {
             "Content-Type": "application/json"
+        }
+
+        with open('config.json', 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        payload = { 
+            "nameStrings": [nome_taxon], 
+            "dataSources": [self._source_id], 
+            "withAllMatches": data.get("withAllMatches", False), 
+            "withCapitalization": data.get("withCapitalization", False),
+            "withSpeciesGroup": data.get("withSpeciesGroup", False), 
+            "withUninomialFuzzyMatch": data.get("withUninomialFuzzyMatch", True), 
+            "withStats": data.get("withStats", True),
+            "mainTaxonThreshold": data.get("mainTaxonThreshold", 0.6),
         }
 
         try:
