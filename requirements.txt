@@ -10,3 +10,4 @@ matplotlib
 customtkinter
 CTkMessagebox
 pyinstaller
+pytest
