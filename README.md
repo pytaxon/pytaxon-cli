@@ -2,7 +2,7 @@
 
 # Pytaxon: A Python software package for the identification and correction of errors in the taxonomic data of biodiversity species
 
-Pytaxon is a Python-based tool designed to correct taxonomic name errors in large biodiversity databases, preventing inaccurate data from affecting ecological analyses and conservation efforts. By leveraging the Global Names Resolver (GNR) API and fuzzy matching techniques, Pytaxon identifies and suggests corrections for discrepancies and nomenclatural inconsistencies in spreadsheets. The tool provides both a Command Line Interface (CLI) and a Graphical User Interface (GUI), making it accessible to users with varying levels of computational expertise. Pytaxon thus enhances the accuracy of biodiversity data, supporting informed conservation decisions and robust scientific research.
+We present pytaxon, a Python software designed to resolve and correct taxonomic names in biodiversity data by leveraging the Global Names Verifier (GNV) API and employing fuzzy matching techniques to suggest corrections for discrepancies and nomenclatural inconsistencies. The pytaxon offers both a Command Line Interface (CLI) and a Graphical User Interface (GUI), ensuring accessibility to users with different levels of computing expertise.
 
 <br>
 
