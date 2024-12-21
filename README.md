@@ -30,7 +30,7 @@ Firstly, you will want to check your spreadsheet for errors, then the program wi
 Then, you may select which data are to be corrected with the "Change" column, after this, you may run the  second command to correct automatically the original spreadsheet with the checked spreadsheet.
 
 ```
-$ pytaxon -r <column names> -i <path to original spreadsheet> -c <name of to check spreadsheet> -si <source id>
+$ pytaxon -r <column names> -os <path to original spreadsheet> -ss <name of suggestion spreadsheet> -si <source id>
 
 $ pytaxon -os <path to original spreadsheet> -cs <path of checked spreadsheet> -o <name of corrected spreadsheet>
 ```
