@@ -62,7 +62,7 @@ Pytaxon's CLI and GUI workflow
 
 If you use the source code of Pytaxon in any form, please cite the following manuscript (we encorage citing Global Names Resolver as well):
 
-_future manuscript_
+Proença Neto MA, De Sousa MPA (2025) Pytaxon: A Python software for resolving and correcting taxonomic names in biodiversity data. Biodiversity Data Journal 13: e138257. https://doi.org/10.3897/BDJ.13.e138257
 
 <br>
 
